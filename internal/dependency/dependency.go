@@ -4,9 +4,7 @@ package dependency
 import (
 	"fmt"
 
-	"github.com/yael-castro/godi/internal/business"
 	"github.com/yael-castro/godi/internal/handler"
-	"github.com/yael-castro/godi/internal/repository"
 )
 
 // Profile defines options of dependency injection
@@ -57,12 +55,6 @@ func handlerDefault(i interface{}) error {
 		return fmt.Errorf(`required a "%T" not a "%T"`, h, i)
 	}
 
-	h.User = handler.User{
-		UserProvider: business.AccountProvider{
-			UserProvider: repository.NewUProvider(repository.Memory),
-		},
-	}
-
 	return nil
 }
 
@@ -71,12 +63,6 @@ func handlerTesting(i interface{}) error {
 	h, ok := i.(*handler.Handler)
 	if !ok {
 		return fmt.Errorf(`required a "%T" not a "%T"`, h, i)
-	}
-
-	h.User = handler.User{
-		UserProvider: business.AccountProvider{
-			UserProvider: repository.NewUProvider(repository.Mock),
-		},
 	}
 
 	return nil
