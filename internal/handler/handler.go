@@ -60,9 +60,8 @@ func New() *Handler {
 
 // Handler main handler used in the ListeAndServe
 type Handler struct {
-	Authenticator http.Handler
-	Authorizator  http.Handler
-	Revoker       http.Handler
+	Authentication http.Handler
+	Authorization  http.Handler
 }
 
 // ServeHTTP decides which http.HandlerFunc use based on the http method
@@ -71,13 +70,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch p {
 	case "/goauth/v1/authenticate":
-		h.Authenticator.ServeHTTP(w, r)
+		h.Authentication.ServeHTTP(w, r)
 
 	case "/goauth/v1/authorizate":
-		h.Authorizator.ServeHTTP(w, r)
-
-	case "/goauth/v1/revoke":
-		h.Revoker.ServeHTTP(w, r)
+		h.Authorization.ServeHTTP(w, r)
 
 	case "/goauth/v1/healthcheck":
 		Healthcheck(w, r)
