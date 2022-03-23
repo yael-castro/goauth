@@ -43,7 +43,7 @@ type (
 	}
 
 	Application struct {
-		ClientId     stringkkk
+		ClientId     string
 		ClientSecret string
 		// AllowedOrigins valid redirect URIs
 		AllowedOrigins []string
