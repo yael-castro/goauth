@@ -2,6 +2,14 @@ package model
 
 import "fmt"
 
+// NotFound error caused by missing resource
+type NotFound string
+
+// Error returns the string value of n
+func (n NotFound) Error() string {
+	return string(n)
+}
+
 // _ "implement" constraint for OAuthError
 var _ error = OAuthError(0)
 

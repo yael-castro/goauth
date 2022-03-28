@@ -1,5 +1,7 @@
 package model
 
+import "net/url"
+
 // Supported scopes (permissions)
 const (
 	// Undefined value that indicates "no permissions"
@@ -36,10 +38,10 @@ type (
 		// CodeChallengeMethod is the method that the token endpoint (authorization endpoint) MUST use to verify
 		// the "code_verifier"
 		CodeChallengeMethod string
-		// RedirectUri is not required by the spec, but your service should require it.
+		// RedirectURL is not required by the spec, but your service should require it.
 		// This URL must match one of the URLs the developer registered when creating the application,
 		// and the authorization server should reject the request if it does not match (Optional)
-		RedirectUri string
+		RedirectURL *url.URL
 	}
 
 	Application struct {
