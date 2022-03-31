@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+var defaultRedisConfiguration = Configuration{
+	Type:     KeyValue,
+	Host:     "localhost",
+	Port:     6379,
+	Database: "0",
+}
+
 // TestNewRedisClient health check for redis connections
 func TestNewRedisClient(t *testing.T) {
 	tdt := []struct {
@@ -12,25 +19,21 @@ func TestNewRedisClient(t *testing.T) {
 		expectedErr error
 	}{
 		// Test case for default connection
-		{
-			config: Configuration{
-				Type:     KeyValue,
-				Host:     "localhost",
-				Port:     6379,
-				Database: "0",
-			},
-		},
+		{config: defaultRedisConfiguration},
 	}
 
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-			_, err := NewRedisClient(v.config)
+			client, err := NewRedisClient(v.config)
 			if err != v.expectedErr {
 				t.Fatal(err)
+			}
+
+			if client == nil {
+				t.Fatal("redis client returned is nil")
 			}
 
 			t.Log(v.config)
 		})
 	}
-
 }

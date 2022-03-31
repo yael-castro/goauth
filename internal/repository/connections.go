@@ -1,10 +1,10 @@
 package repository
 
 import (
+	"context"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"strconv"
-
-	"github.com/go-redis/redis"
 )
 
 // NewRedisClient establish connection to Redis using Configuration
@@ -20,5 +20,5 @@ func NewRedisClient(config Configuration) (client *redis.Client, err error) {
 		DB:       db,
 	})
 
-	return nil, client.Ping().Err()
+	return client, client.Ping(context.TODO()).Err()
 }
