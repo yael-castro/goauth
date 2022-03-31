@@ -5,9 +5,17 @@ import "fmt"
 // NotFound error caused by missing resource
 type NotFound string
 
-// Error returns the string value of n
+// Error returns the string value of NotFound
 func (n NotFound) Error() string {
 	return string(n)
+}
+
+// DuplicateRecord error caused by duplicate primary key or duplicate record
+type DuplicateRecord string
+
+// Error returns the string value of DuplicateRecord
+func (d DuplicateRecord) Error() string {
+	return string(d)
 }
 
 // _ "implement" constraint for OAuthError

@@ -25,23 +25,23 @@ type (
 	// Authorization request of authorization following the protocol OAuth 2.0
 	Authorization struct {
 		// ClientId public application id
-		ClientId string
+		ClientId string `json:"clientId,omitempty"`
 		// ClientSecret private application secret
-		ClientSecret string
+		ClientSecret string `json:"clientSecret,omitempty"`
 		// Scope one or more scope values indicating additional access requested by the application (Optional)
-		Scope string
+		Scope string `json:"scope,omitempty"`
 		// ResponseType expected response type (code, ...)
-		ResponseType string
+		ResponseType string `json:"responseType,omitempty"`
 		// State is used by the application to store request-specific data and/or prevent CSRF attacks (Recommended)
-		State         string
-		CodeChallenge string
+		State         string `json:"state,omitempty"`
+		CodeChallenge string `json:"codeChallenge,omitempty"`
 		// CodeChallengeMethod is the method that the token endpoint (authorization endpoint) MUST use to verify
 		// the "code_verifier"
-		CodeChallengeMethod string
+		CodeChallengeMethod string `json:"codeChallengeMethod,omitempty"`
 		// RedirectURL is not required by the spec, but your service should require it.
 		// This URL must match one of the URLs the developer registered when creating the application,
 		// and the authorization server should reject the request if it does not match (Optional)
-		RedirectURL *url.URL
+		RedirectURL *url.URL `json:"redirectURL,omitempty"`
 	}
 
 	Application struct {
