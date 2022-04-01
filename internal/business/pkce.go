@@ -1,10 +1,12 @@
 package business
 
 import (
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
 	"net/url"
 	"regexp"
+	"strings"
+
+	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/godi/internal/repository"
 )
 
 // _ "implement" constraint for ProofKeyCodeExchange
@@ -48,7 +50,7 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	}
 
 	// Validating state
-	if ok, _ := regexp.MatchString(`[\x20-\x7E]`, auth.State); !ok {
+	if ok, _ := regexp.MatchString(`^[\x20-\x7E]+$`, auth.State); !ok {
 		q.Set("error", model.InvalidRequest.Error())
 		q.Set("error_description", "invalid state")
 		goto end
@@ -64,7 +66,7 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	// Validation of redirect uri
 	for _, origin := range app.AllowedOrigins {
 		if auth.RedirectURL.RawPath == origin {
-			return auth.RedirectURL
+			goto end
 		}
 	}
 
@@ -84,7 +86,7 @@ var _ Authorizer = ProofKeyCodeExchange{}
 type ProofKeyCodeExchange struct {
 	// Authorizer must be an implementation of Authorize Code Grant Flow
 	Authorizer
-	repository.SessionStorage
+	repository.Storage
 }
 
 // Authorize validates the code_challenge and code_challenge_method
@@ -94,6 +96,8 @@ func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 	}
 
 	q := auth.RedirectURL.Query()
+
+	auth.CodeChallengeMethod = strings.ToUpper(auth.CodeChallengeMethod)
 
 	if auth.CodeChallengeMethod == "" {
 		auth.CodeChallengeMethod = "PLAIN"
@@ -105,9 +109,19 @@ func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 		goto end
 	}
 
-	// TODO validate code challenge
+	if ok, _ := regexp.MatchString(`^([-A-Z.a-z0-9]|_|~){43,128}$`, auth.CodeChallenge); !ok {
+		q.Set("error", model.InvalidRequest.Error())
+		q.Set("error_description", "invalid code_challenge")
+		goto end
+	}
 
-	if err := p.SessionStorage.CreateSession(auth); err != nil {
+	if err := p.Storage.Create(auth); err != nil {
+		if _, ok := err.(model.DuplicateRecord); ok {
+			q.Set("error", model.InvalidRequest.Error())
+			q.Set("error_description", err.Error())
+			goto end
+		}
+
 		q.Set("error", model.ServerError.Error())
 		q.Set("error_description", err.Error())
 	}
