@@ -34,7 +34,9 @@ func (c *AuthorizationCodeGrant) SetFinder(finder repository.ClientFinder) {
 func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	q := auth.RedirectURL.Query()
 
-	client, err := c.finder.Find(auth.ClientId)
+	var client model.Client
+
+	i, err := c.finder.Find(auth.ClientId)
 	// Obtaining the application data by client id
 	if _, ok := err.(model.NotFound); ok {
 		q.Set("error", model.UnauthorizedClient.Error())
@@ -55,6 +57,8 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 		q.Set("error_description", "invalid state")
 		goto end
 	}
+
+	client = i.(model.Client)
 
 	// Identifying client using the client id and client secret
 	if client.Id != auth.ClientId || client.Secret != auth.ClientSecret {

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Storage defines a general storage
+// Storage defines a general store
 // For example: potato storage or client session storage
 type Storage interface {
 	// Create creates a record using the received data
@@ -27,7 +27,7 @@ type StateStorage struct {
 }
 
 // generateKey creates a new key to be an identifier in the redis database based on the received state
-func generateKey(state string) string {
+func (StateStorage) generateKey(state string) string {
 	return "state:" + state
 }
 
@@ -41,7 +41,7 @@ func generateKey(state string) string {
 func (s StateStorage) Create(i interface{}) error {
 	auth := i.(model.Authorization)
 
-	cmd := s.SetNX(context.TODO(), generateKey(auth.State), model.BinaryJSON{I: auth}, 10*time.Second)
+	cmd := s.SetNX(context.TODO(), s.generateKey(auth.State), model.BinaryJSON{I: auth}, 10*time.Second)
 
 	flag, err := cmd.Result()
 	if err != nil {
@@ -57,7 +57,7 @@ func (s StateStorage) Create(i interface{}) error {
 
 // Obtain search a saved instance of model.Authorization by the state
 func (s StateStorage) Obtain(state string) (interface{}, error) {
-	cmd := s.Get(context.TODO(), generateKey(state))
+	cmd := s.Get(context.TODO(), s.generateKey(state))
 
 	serializedData, err := cmd.Result()
 	if err != nil {
@@ -73,12 +73,6 @@ func (s StateStorage) Obtain(state string) (interface{}, error) {
 // Delete removes a record using the state received as parameter
 //
 // Note: if the record does not exist, it returns NO errors
-func (s StateStorage) Delete(state string) (err error) {
-	return s.Del(context.TODO(), generateKey(state)).Err()
-}
-
-// ApplicationFinder defines a finder for application data
-type ApplicationFinder interface {
-	// FindApplication obtains a application by id
-	FindApplication(string) (model.Application, error)
+func (s StateStorage) Delete(state string) error {
+	return s.Del(context.TODO(), s.generateKey(state)).Err()
 }
