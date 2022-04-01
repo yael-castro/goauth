@@ -44,10 +44,13 @@ type (
 		RedirectURL *url.URL `json:"redirectURL,omitempty"`
 	}
 
-	Application struct {
-		ClientId     string
-		ClientSecret string
-		// AllowedOrigins valid redirect URIs
+	// Client defines the
+	Client struct {
+		// Id public client identifier
+		Id string
+		// Secret optional secret client
+		Secret string
+		// AllowedOrigins origins to which the client can be redirected
 		AllowedOrigins []string
 	}
 )

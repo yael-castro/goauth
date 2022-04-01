@@ -12,21 +12,21 @@ import (
 // _ "implement" constraint for ProofKeyCodeExchange
 var _ Authorizer = (*AuthorizationCodeGrant)(nil)
 
-// AuthorizationCodeGrant authorize the allowed redirect URLs
+// AuthorizationCodeGrant defines the Authorization Code Grant
 type AuthorizationCodeGrant struct {
-	finder repository.ApplicationFinder
+	finder repository.Finder
 }
 
-// SetFinder initializes the instance of repository.ApplicationFinder used to get the model.Application
-func (c *AuthorizationCodeGrant) SetFinder(finder repository.ApplicationFinder) {
+// SetFinder initializes the instance of repository.ClientFinder used to get the model.Client
+func (c *AuthorizationCodeGrant) SetFinder(finder repository.ClientFinder) {
 	c.finder = finder
 }
 
-// Authorize validate the application (model.Application) obtained with the received data (model.Authorization)
+// Authorize validate the client model.Client obtained with the received data (model.Authorization)
 //
 // In resume...
 //
-// 1. Identifies the app using the client id and client secret
+// 1. Identifies the client using the client id and client secret
 //
 // 2. Validates the received state
 //
@@ -34,7 +34,7 @@ func (c *AuthorizationCodeGrant) SetFinder(finder repository.ApplicationFinder) 
 func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	q := auth.RedirectURL.Query()
 
-	app, err := c.finder.FindApplication(auth.ClientId)
+	client, err := c.finder.Find(auth.ClientId)
 	// Obtaining the application data by client id
 	if _, ok := err.(model.NotFound); ok {
 		q.Set("error", model.UnauthorizedClient.Error())
@@ -56,15 +56,15 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 		goto end
 	}
 
-	// Identifying application using the client id and client secret
-	if app.ClientId != auth.ClientId || app.ClientSecret != auth.ClientSecret {
+	// Identifying client using the client id and client secret
+	if client.Id != auth.ClientId || client.Secret != auth.ClientSecret {
 		q.Set("error", model.UnauthorizedClient.Error())
 		q.Set("error_description", "client credentials does not match")
 		goto end
 	}
 
 	// Validation of redirect uri
-	for _, origin := range app.AllowedOrigins {
+	for _, origin := range client.AllowedOrigins {
 		if auth.RedirectURL.RawPath == origin {
 			goto end
 		}
@@ -89,7 +89,8 @@ type ProofKeyCodeExchange struct {
 	repository.Storage
 }
 
-// Authorize validates the code_challenge and code_challenge_method
+// Authorize validates the code_challenge and code_challenge_method and, if all is ok,
+// saves the session of this authorization requests using the received state
 func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 	if uri := p.Authorizer.Authorize(auth); uri.Query().Get("error") != "" { // Redirect URI validation
 		return uri
