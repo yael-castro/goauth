@@ -3,8 +3,6 @@ package dependency
 
 import (
 	"fmt"
-
-	"github.com/yael-castro/godi/internal/handler"
 )
 
 // Profile defines options of dependency injection
@@ -14,8 +12,6 @@ type Profile uint
 const (
 	// Default defines the production profile
 	Default Profile = iota
-	// Testing defines the testing profile used to make a unit and integration tests
-	Testing
 )
 
 // Injector defines a dependency injector
@@ -40,9 +36,6 @@ func NewInjector(p Profile) Injector {
 	switch p {
 	case Default:
 		return InjectorFunc(handlerDefault)
-
-	case Testing:
-		return InjectorFunc(handlerTesting)
 	}
 
 	panic(fmt.Sprintf(`invalid profile: "%d" is not supported by Ne`))
@@ -50,20 +43,5 @@ func NewInjector(p Profile) Injector {
 
 // handlerDefault InjectorFunc for *handler.Handler that uses a Default Profile
 func handlerDefault(i interface{}) error {
-	h, ok := i.(*handler.Handler)
-	if !ok {
-		return fmt.Errorf(`required a "%T" not a "%T"`, h, i)
-	}
-
-	return nil
-}
-
-// handlerTesting InjectorFunc for *handler.Handler that uses a Testing Profile
-func handlerTesting(i interface{}) error {
-	h, ok := i.(*handler.Handler)
-	if !ok {
-		return fmt.Errorf(`required a "%T" not a "%T"`, h, i)
-	}
-
 	return nil
 }
