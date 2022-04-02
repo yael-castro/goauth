@@ -54,10 +54,10 @@ func TestStateStorage_Create(t *testing.T) {
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
 			t.Cleanup(func() {
-				_ = storage.Delete(v.Authorization.State)
+				_ = storage.Delete(string(v.Authorization.State))
 			})
 
-			err := storage.Create(v.Authorization)
+			err := storage.Create(string(v.State), v.Authorization)
 			if !errors.Is(err, v.expectedErr) {
 				t.Fatal(err)
 			}
@@ -101,7 +101,7 @@ func TestStateStorage_Obtain(t *testing.T) {
 	storage := StateStorage{Client: client}
 
 	for _, v := range tdt {
-		err := storage.Create(v.expectedData)
+		err := storage.Create(string(v.expectedData.State), v.expectedData)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -109,7 +109,7 @@ func TestStateStorage_Obtain(t *testing.T) {
 
 	t.Cleanup(func() {
 		for _, v := range tdt {
-			_ = storage.Delete(v.expectedData.State)
+			_ = storage.Delete(string(v.expectedData.State))
 		}
 
 		_ = client.Close()
@@ -117,7 +117,7 @@ func TestStateStorage_Obtain(t *testing.T) {
 
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-			gotData, err := storage.Obtain(v.expectedData.State)
+			gotData, err := storage.Obtain(string(v.expectedData.State))
 			if !errors.Is(err, v.expectedErr) {
 				t.Fatal(err)
 			}
@@ -163,7 +163,7 @@ func TestStateStorage_Delete(t *testing.T) {
 
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-			err := storage.Delete(v.state)
+			err := storage.Delete(string(v.state))
 			if !errors.Is(err, v.expectedErr) {
 				t.Fatal(err)
 			}

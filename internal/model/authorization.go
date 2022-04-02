@@ -2,6 +2,7 @@ package model
 
 import (
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -35,6 +36,21 @@ type Client struct {
 	AllowedOrigins []string `json:"-"`
 }
 
+// IsValidOrigin checks if the origin received as parameter match with some valid origin in AllowedOrigins
+func (c Client) IsValidOrigin(origin string) bool {
+	origin = path.Join(origin)
+
+	for _, allowedOrigin := range c.AllowedOrigins {
+		allowedOrigin = path.Join(allowedOrigin)
+
+		if allowedOrigin == origin {
+			return true
+		}
+	}
+
+	return false
+}
+
 // State is used by the application to store request-specific data and/or prevent CSRF attacks (Recommended)
 type State string
 
@@ -62,3 +78,5 @@ func (m CodeChallengeMethod) IsValid() bool {
 	method := strings.ToLower(string(m))
 	return method == "plain" || method == "s256"
 }
+
+type AuthorizationCode string

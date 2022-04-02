@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/yael-castro/godi/internal/model"
 )
@@ -48,4 +49,20 @@ func (r ClientFinder) Find(clientId string) (i interface{}, err error) {
 	client.AllowedOrigins, err = r.LRange(context.TODO(), r.listKey(clientId), 0, 10).Result()
 	i = client
 	return
+}
+
+// _ "implement" constraint for MockClientFinder
+var _ Finder = MockClientFinder{}
+
+// MockClientFinder mock store for model.Client
+type MockClientFinder map[string]model.Client
+
+// Find search a client by id
+func (m MockClientFinder) Find(clientId string) (interface{}, error) {
+	client, ok := m[clientId]
+	if !ok {
+		return nil, model.NotFound(fmt.Sprintf(`missing client "%s"`, clientId))
+	}
+
+	return client, nil
 }

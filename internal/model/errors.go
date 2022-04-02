@@ -25,6 +25,10 @@ type OAuthError uint
 
 // Error parsing the integer value to
 func (e OAuthError) Error() string {
+	return e.String()
+}
+
+func (e OAuthError) String() string {
 	switch e {
 	case InvalidRequest:
 		return "invalid_request"
