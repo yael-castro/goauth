@@ -1,12 +1,9 @@
 package business
 
 import (
-	"net/url"
-	"regexp"
-	"strings"
-
 	"github.com/yael-castro/godi/internal/model"
 	"github.com/yael-castro/godi/internal/repository"
+	"net/url"
 )
 
 // _ "implement" constraint for ProofKeyCodeExchange
@@ -52,7 +49,7 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	}
 
 	// Validating state
-	if ok, _ := regexp.MatchString(`^[\x20-\x7E]+$`, auth.State); !ok {
+	if auth.State.IsValid() {
 		q.Set("error", model.InvalidRequest.Error())
 		q.Set("error_description", "invalid state")
 		goto end
@@ -102,19 +99,13 @@ func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 
 	q := auth.RedirectURL.Query()
 
-	auth.CodeChallengeMethod = strings.ToUpper(auth.CodeChallengeMethod)
-
-	if auth.CodeChallengeMethod == "" {
-		auth.CodeChallengeMethod = "PLAIN"
-	}
-
-	if auth.CodeChallengeMethod != "PLAIN" && auth.CodeChallengeMethod != "S256" {
+	if auth.CodeChallengeMethod.IsValid() {
 		q.Set("error", model.InvalidRequest.Error())
 		q.Set("error_description", "invalid code_challenge_method, must be PLAIN or S256")
 		goto end
 	}
 
-	if ok, _ := regexp.MatchString(`^([-A-Z.a-z0-9]|_|~){43,128}$`, auth.CodeChallenge); !ok {
+	if auth.CodeChallenge.IsValid() {
 		q.Set("error", model.InvalidRequest.Error())
 		q.Set("error_description", "invalid code_challenge")
 		goto end
