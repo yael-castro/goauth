@@ -29,6 +29,10 @@ func TestNewRedisClient(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			t.Cleanup(func() {
+				_ = client.Close()
+			})
+
 			if client == nil {
 				t.Fatal("redis client returned is nil")
 			}

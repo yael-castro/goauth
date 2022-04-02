@@ -20,7 +20,7 @@ func TestStateStorage_Create(t *testing.T) {
 				ClientId:            "3aad9943-714d-4576-9c6f-bb45b142666c",
 				Scope:               "http://localhost/private/,http://localhost/private2/",
 				ResponseType:        "code",
-				CodeChallenge:       "FEDCBA",
+				CodeChallenge:       "FFF",
 				CodeChallengeMethod: "PLAIN",
 				RedirectURL: func() *url.URL {
 					uri, _ := url.Parse("http://localhost/callback")
@@ -46,7 +46,7 @@ func TestStateStorage_Create(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		client.Close()
+		_ = client.Close()
 	})
 
 	storage := StateStorage{Client: client}
@@ -54,7 +54,7 @@ func TestStateStorage_Create(t *testing.T) {
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
 			t.Cleanup(func() {
-				storage.Delete(v.Authorization.State)
+				_ = storage.Delete(v.Authorization.State)
 			})
 
 			err := storage.Create(v.Authorization)
@@ -109,8 +109,10 @@ func TestStateStorage_Obtain(t *testing.T) {
 
 	t.Cleanup(func() {
 		for _, v := range tdt {
-			storage.Delete(v.expectedData.State)
+			_ = storage.Delete(v.expectedData.State)
 		}
+
+		_ = client.Close()
 	})
 
 	for i, v := range tdt {
@@ -140,7 +142,7 @@ func TestStateStorage_Obtain(t *testing.T) {
 
 func TestStateStorage_Delete(t *testing.T) {
 	tdt := []struct {
-		state       string
+		state       model.State
 		expectedErr error
 	}{
 		{state: "abc"},
@@ -152,6 +154,10 @@ func TestStateStorage_Delete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Cleanup(func() {
+		_ = client.Close()
+	})
 
 	storage := StateStorage{Client: client}
 

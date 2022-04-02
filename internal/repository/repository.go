@@ -16,7 +16,7 @@ const (
 // _ "implement" constraint for Configuration struct
 var _ fmt.Stringer = Configuration{}
 
-// Configuration options used to establish conenction to any repository
+// Configuration options used to establish connection to any repository
 type Configuration struct {
 	// Type defines the type of repository to which you want to establish a connection
 	Type
@@ -32,7 +32,7 @@ type Configuration struct {
 	Debug bool
 }
 
-// String build and returns a URI used to establish a connection to any repository defined by the Type embbed in the Configuration structure
+// String build and returns a URI used to establish a connection to any repository defined by the Type embed in the Configuration structure
 //
 // Supported types KeyValue and NoSQL
 //

@@ -28,11 +28,11 @@ type Authorization struct {
 // Client defines an allowed client to make request for the Authorization Server
 type Client struct {
 	// Id public client identifier
-	Id string
+	Id string `json:"id"`
 	// Secret optional secret client
-	Secret string
+	Secret string `json:"secret"`
 	// AllowedOrigins origins to which the client can be redirected
-	AllowedOrigins []string
+	AllowedOrigins []string `json:"-"`
 }
 
 // State is used by the application to store request-specific data and/or prevent CSRF attacks (Recommended)

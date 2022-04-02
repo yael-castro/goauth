@@ -27,8 +27,8 @@ type StateStorage struct {
 }
 
 // generateKey creates a new key to be an identifier in the redis database based on the received state
-func (StateStorage) generateKey(state string) string {
-	return "state:" + state
+func (StateStorage) generateKey(state model.State) string {
+	return "state:" + string(state)
 }
 
 // Create receives a model.Authorization and uses your data to create a state-identified record
@@ -56,7 +56,7 @@ func (s StateStorage) Create(i interface{}) error {
 }
 
 // Obtain search a saved instance of model.Authorization by the state
-func (s StateStorage) Obtain(state string) (interface{}, error) {
+func (s StateStorage) Obtain(state model.State) (interface{}, error) {
 	cmd := s.Get(context.TODO(), s.generateKey(state))
 
 	serializedData, err := cmd.Result()
@@ -73,6 +73,6 @@ func (s StateStorage) Obtain(state string) (interface{}, error) {
 // Delete removes a record using the state received as parameter
 //
 // Note: if the record does not exist, it returns NO errors
-func (s StateStorage) Delete(state string) error {
+func (s StateStorage) Delete(state model.State) error {
 	return s.Del(context.TODO(), s.generateKey(state)).Err()
 }
