@@ -44,7 +44,7 @@ func (c *AuthorizationCodeGrant) SetFinder(finder repository.ClientFinder) {
 //
 // 3. Validates the redirect uri
 func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
-	q := auth.RedirectURL.Query()
+	q := url.Values{}
 
 	var (
 		client model.Client
@@ -76,11 +76,13 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 
 	client = i.(model.Client)
 
-	// Identifying client using the client id and client secret
-	if client.Id != auth.ClientId || client.Secret != auth.ClientSecret {
-		q.Set("error", model.UnauthorizedClient.Error())
-		q.Set("error_description", "client credentials does not match")
-		goto end
+	if client.Secret != "" {
+		// Validating the secret
+		if client.Secret != auth.ClientSecret {
+			q.Set("error", model.UnauthorizedClient.Error())
+			q.Set("error_description", "client credentials does not match")
+			goto end
+		}
 	}
 
 	if !client.IsValidOrigin(auth.RedirectURL.String()) {
@@ -116,7 +118,7 @@ func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 		return uri
 	}
 
-	q := uri.Query()
+	q := url.Values{}
 	code := p.GenerateCode()
 
 	if !auth.CodeChallengeMethod.IsValid() {
@@ -125,6 +127,7 @@ func (p ProofKeyCodeExchange) Authorize(auth model.Authorization) *url.URL {
 		goto end
 	}
 
+	// TODO validate correctly the code challenge based on the model.CodeChallengeMethod
 	if !auth.CodeChallenge.IsValid() {
 		q.Set("error", model.InvalidRequest.Error())
 		q.Set("error_description", "invalid code_challenge")
