@@ -18,6 +18,7 @@ func TestClientFinder_Find(t *testing.T) {
 		skipInitialization bool
 	}{
 		{
+			clientId: "abc",
 			expectedClient: model.Client{
 				Id: "abc",
 				AllowedOrigins: []string{
@@ -54,8 +55,8 @@ func TestClientFinder_Find(t *testing.T) {
 
 		cmd := client.Set(
 			context.TODO(),
-			finder.clientKey(v.clientId),
-			model.BinaryJSON{I: v.expectedClient},
+			finder.secretKey(v.clientId),
+			v.expectedClient.Secret,
 			0,
 		)
 
@@ -76,7 +77,7 @@ func TestClientFinder_Find(t *testing.T) {
 
 	t.Cleanup(func() {
 		for _, v := range tdt {
-			client.Del(context.TODO(), finder.clientKey(v.clientId))
+			client.Del(context.TODO(), finder.secretKey(v.clientId))
 			client.Del(context.TODO(), finder.listKey(v.clientId))
 		}
 

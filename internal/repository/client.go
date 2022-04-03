@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/yael-castro/godi/internal/model"
@@ -22,31 +21,31 @@ type ClientFinder struct {
 	*redis.Client
 }
 
-// clientKey creates a key to search a client
+// clientKey creates a key with the pattern "client:<clientId>" to save a client
 func (ClientFinder) clientKey(clientId string) string {
 	return "client:" + clientId
 }
 
-// listKey creates a key to search the allowed redirect url of client
-func (ClientFinder) listKey(clientId string) string {
-	return "client:" + clientId + ":origins"
+// secretKey creates a key with the pattern "client:<clientId>:secret" to save a client secret
+func (c ClientFinder) secretKey(clientId string) string {
+	return c.clientKey(clientId) + ":secret"
+}
+
+// listKey creates a key with the pattern "client:<clientId>:origins" to save allowed origins for client
+func (c ClientFinder) listKey(clientId string) string {
+	return c.clientKey(clientId) + ":origins"
 }
 
 // Find search a client by client id
-func (r ClientFinder) Find(clientId string) (i interface{}, err error) {
-	client := model.Client{}
+func (c ClientFinder) Find(clientId string) (i interface{}, err error) {
+	client := model.Client{Id: clientId}
 
-	serializedData, err := r.Get(context.TODO(), r.clientKey(clientId)).Result()
+	client.Secret, err = c.Get(context.TODO(), c.secretKey(clientId)).Result()
 	if err != nil {
 		return
 	}
 
-	err = json.Unmarshal([]byte(serializedData), &client)
-	if err != nil {
-		return
-	}
-
-	client.AllowedOrigins, err = r.LRange(context.TODO(), r.listKey(clientId), 0, 10).Result()
+	client.AllowedOrigins, err = c.LRange(context.TODO(), c.listKey(clientId), 0, 10).Result()
 	i = client
 	return
 }
@@ -63,6 +62,8 @@ func (m MockClientFinder) Find(clientId string) (interface{}, error) {
 	if !ok {
 		return nil, model.NotFound(fmt.Sprintf(`missing client "%s"`, clientId))
 	}
+
+	client.Id = clientId
 
 	return client, nil
 }

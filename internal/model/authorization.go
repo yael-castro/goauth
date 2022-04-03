@@ -29,11 +29,11 @@ type Authorization struct {
 // Client defines an allowed client to make request for the Authorization Server
 type Client struct {
 	// Id public client identifier
-	Id string `json:"id"`
+	Id string
 	// Secret optional secret client
-	Secret string `json:"secret"`
+	Secret string
 	// AllowedOrigins origins to which the client can be redirected
-	AllowedOrigins []string `json:"-"`
+	AllowedOrigins []string
 }
 
 // IsValidOrigin checks if the origin received as parameter match with some valid origin in AllowedOrigins
