@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/yael-castro/godi/internal/dependency"
 	"log"
 	"net/http"
 	"os"
@@ -16,8 +17,13 @@ func main() {
 
 	log.SetFlags(log.Flags() | log.Lshortfile)
 
-	// dependency.NewInjector(dependency.Default).Inject(h)
+	mux := http.NewServeMux()
+
+	err := dependency.NewInjector(dependency.Testing).Inject(mux)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Printf(`http server is running on port "%v" %v`, port, "🤘\n")
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, mux))
 }

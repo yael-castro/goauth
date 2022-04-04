@@ -3,6 +3,11 @@ package dependency
 
 import (
 	"fmt"
+	"github.com/yael-castro/godi/internal/business"
+	"github.com/yael-castro/godi/internal/handler"
+	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/godi/internal/repository"
+	"net/http"
 )
 
 // Profile defines options of dependency injection
@@ -12,6 +17,7 @@ type Profile uint
 const (
 	// Default defines the production profile
 	Default Profile = iota
+	Testing
 )
 
 // Injector defines a dependency injector
@@ -34,14 +40,44 @@ func (f InjectorFunc) Inject(i interface{}) error {
 // If pass a parameter an invalid profile it panics
 func NewInjector(p Profile) Injector {
 	switch p {
-	case Default:
-		return InjectorFunc(handlerDefault)
+	case Testing:
+		return InjectorFunc(testingProfile)
 	}
 
-	panic(fmt.Sprintf(`invalid profile: "%d" is not supported by Ne`))
+	panic(fmt.Sprintf(`invalid profile: "%d" is not supported`, p))
 }
 
-// handlerDefault InjectorFunc for *handler.Handler that uses a Default Profile
-func handlerDefault(i interface{}) error {
+// testingProfile InjectorFunc for *handler.Handler that uses a Testing Profile
+func testingProfile(i interface{}) error {
+	mux, ok := i.(*http.ServeMux)
+	if !ok {
+		return fmt.Errorf(`invalid type "%T"`, mux)
+	}
+
+	redisSettings := repository.Configuration{
+		Type:     repository.KeyValue,
+		Host:     "localhost",
+		Port:     6379,
+		Database: "0",
+	}
+
+	redisClient, err := repository.NewRedisClient(redisSettings)
+	if err != nil {
+		return err
+	}
+
+	authorizer := business.OAuth{
+		"code": business.AuthorizationCodeGrant{
+			CodeGenerator: business.CodeGeneratorFunc(func() model.AuthorizationCode {
+				return "ABC"
+			}),
+			Finder:  repository.ClientFinder{Client: redisClient},
+			Storage: repository.StateStorage{Client: redisClient},
+			PKCE:    business.ProofKeyCodeExchange{},
+		},
+	}
+
+	mux.HandleFunc("/go-auth/v1/authorization", handler.NewAuthorizationHandler(authorizer))
+
 	return nil
 }
