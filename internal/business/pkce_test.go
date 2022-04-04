@@ -92,17 +92,16 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		},
 	}
 
-	authorizer := ProofKeyCodeExchange{
-		Authorizer: AuthorizationCodeGrant{
-			finder: repository.MockClientFinder{
-				"a06a0630-31f5-4cc3-8e47-ea61a60c1199": {
-					Id:             "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
-					AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
-				},
-				"4cc3-8e47-ea61a60c1199-a06a0630-31f5": {
-					Id:             "4cc3-8e47-ea61a60c1199-a06a0630-31f5",
-					AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
-				},
+	authorizer := AuthorizationCodeGrant{
+		PKCE: ProofKeyCodeExchange{},
+		Finder: repository.MockClientFinder{
+			"a06a0630-31f5-4cc3-8e47-ea61a60c1199": {
+				Id:             "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
+			},
+			"4cc3-8e47-ea61a60c1199-a06a0630-31f5": {
+				Id:             "4cc3-8e47-ea61a60c1199-a06a0630-31f5",
+				AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
 			},
 		},
 		CodeGenerator: CodeGeneratorFunc(func() model.AuthorizationCode {
