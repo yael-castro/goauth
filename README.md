@@ -5,10 +5,16 @@
 
 Authorization server based on the [Authorization Code Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1) with the extension [Proof Key for Code Exchange (PKCE)](https://datatracker.ietf.org/doc/html/rfc7636) of the protocol [OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc6749)
 
+
+###### Optional features excluded
+- Refresh tokens
+- redirect_url in the authorization response
+
 <hr>
 
 ###### Architecture style explained
-The architectura style used in this project is the most common layered architecture pattern.
+The architecture style used in this project is the most common layered architecture pattern
+with a little changes.
 
 ```
 internal
