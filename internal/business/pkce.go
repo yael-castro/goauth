@@ -3,6 +3,7 @@ package business
 import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/yael-castro/godi/internal/model"
 	"github.com/yael-castro/godi/internal/repository"
 	"net/url"
@@ -20,6 +21,11 @@ type CodeGeneratorFunc func() model.AuthorizationCode
 // GenerateCode executes f() to generate a random code
 func (f CodeGeneratorFunc) GenerateCode() model.AuthorizationCode {
 	return f()
+}
+
+// NewUUIDCode creates a new model.AuthorizationCode that is basically an UUID
+func NewUUIDCode() model.AuthorizationCode {
+	return model.AuthorizationCode(uuid.New().String())
 }
 
 // _ "implement" constraint for ProofKeyCodeExchange
@@ -54,7 +60,6 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 		return OAuthError(uri, model.InvalidRequest, "invalid state")
 	}
 
-	// TODO validate the user agent
 	i, err := c.Finder.Find(auth.ClientId)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
 		return OAuthError(uri, model.UnauthorizedClient, fmt.Sprintf(`client "%s" does not exist`, auth.ClientId))
@@ -76,6 +81,8 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	if !client.IsValidOrigin(auth.RedirectURL.String()) {
 		return OAuthError(uri, model.UnauthorizedClient, fmt.Sprintf(`invalid redirect uri "%s"`, auth.RedirectURL.RawPath))
 	}
+
+	// TODO user authentication
 
 	// Proof Key for Code Exchange extension
 	if c.PKCE != nil {
