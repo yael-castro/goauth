@@ -8,6 +8,8 @@ import (
 	"github.com/yael-castro/godi/internal/model"
 	"github.com/yael-castro/godi/internal/repository"
 	"net/http"
+	"os"
+	"strconv"
 )
 
 // Profile defines options of dependency injection
@@ -42,6 +44,8 @@ func NewInjector(p Profile) Injector {
 	switch p {
 	case Testing:
 		return InjectorFunc(testingProfile)
+	case Default:
+		return InjectorFunc(defaultProfile)
 	}
 
 	panic(fmt.Sprintf(`invalid profile: "%d" is not supported`, p))
@@ -51,7 +55,7 @@ func NewInjector(p Profile) Injector {
 func testingProfile(i interface{}) error {
 	mux, ok := i.(*http.ServeMux)
 	if !ok {
-		return fmt.Errorf(`invalid type "%T"`, mux)
+		return fmt.Errorf(`invalid type "%T"`, i)
 	}
 
 	redisSettings := repository.Configuration{
@@ -71,6 +75,47 @@ func testingProfile(i interface{}) error {
 			CodeGenerator: business.CodeGeneratorFunc(func() model.AuthorizationCode {
 				return "ABC"
 			}),
+			Finder:  repository.ClientFinder{Client: redisClient},
+			Storage: repository.StateStorage{Client: redisClient},
+			PKCE:    business.ProofKeyCodeExchange{},
+		},
+	}
+
+	mux.HandleFunc("/go-auth/v1/authorization", handler.NewAuthorizationHandler(authorizer))
+
+	return nil
+}
+
+// defaultProfile InjectorFunc for *handler.Handler that uses a Testing Profile
+func defaultProfile(i interface{}) error {
+	mux, ok := i.(*http.ServeMux)
+	if !ok {
+		return fmt.Errorf(`invalid type "%T"`, i)
+	}
+
+	redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
+	if err != nil {
+		return err
+	}
+
+	redisSettings := repository.Configuration{
+		Type:     repository.KeyValue,
+		Host:     os.Getenv("REDIS_HOST"),
+		Port:     redisPort,
+		Database: os.Getenv("REDIS_DATABASE"),
+		User:     os.Getenv("REDIS_USER"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+	}
+
+	redisClient, err := repository.NewRedisClient(redisSettings)
+	if err != nil {
+		return err
+	}
+
+	authorizer := business.OAuth{
+		"code": business.AuthorizationCodeGrant{
+			CodeGenerator: business.CodeGeneratorFunc(business.NewUUIDCode),
+			// OwnerFinder: ...
 			Finder:  repository.ClientFinder{Client: redisClient},
 			Storage: repository.StateStorage{Client: redisClient},
 			PKCE:    business.ProofKeyCodeExchange{},
