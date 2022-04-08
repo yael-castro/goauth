@@ -10,9 +10,9 @@ import (
 // Owner represents the person owner of protected resources
 type Owner struct {
 	// Id is the owner username
-	Id string
+	Id string `json:"id"`
 	// Password works as owner id
-	Password string
+	Password string `json:"-"`
 }
 
 // Authorization request of authorization following the protocol OAuth 2.0
@@ -32,6 +32,9 @@ type Authorization struct {
 	// This URL must match one of the URLs the developer registered when creating the application,
 	// and the authorization server should reject the request if it does not match (Optional)
 	RedirectURL *url.URL `json:"redirectURL,omitempty"`
+	// BasicAuth is not explicit part of the protocol OAuth 2.0
+	// but is a way to pass the owner credentials
+	BasicAuth Owner `json:"-"`
 }
 
 // Client defines an allowed client to make request for the Authorization Server
