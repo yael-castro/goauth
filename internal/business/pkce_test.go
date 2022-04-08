@@ -107,7 +107,7 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		CodeGenerator: CodeGeneratorFunc(func() model.AuthorizationCode {
 			return "ABC"
 		}),
-		Storage: &repository.MockStateStore{},
+		Storage: &repository.MockStorage{},
 	}
 
 	for i, v := range tdt {

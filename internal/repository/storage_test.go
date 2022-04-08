@@ -13,7 +13,7 @@ import (
 type testCase struct {
 	// id record identifier
 	id string
-	// input expected data or record
+	// input record to be created or expected data
 	input interface{}
 	// expectedErr error that is expected
 	expectedErr error
@@ -21,6 +21,7 @@ type testCase struct {
 
 // TestStorage_Create
 // Check the functionality of the Create method for different Storage interface implementations (StateStorage and OwnerStorage)
+// TODO validate the duplicated records
 func TestStorage_Create(t *testing.T) {
 	client, err := NewRedisClient(defaultRedisConfiguration)
 	if err != nil {
@@ -66,6 +67,29 @@ func TestStorage_Create(t *testing.T) {
 			tests: []testCase{
 				{id: "abc", input: model.Owner{Id: "abc", Password: "xyz"}},
 				{id: "xyz", input: model.Owner{Id: "xyz", Password: "abc"}},
+			},
+		},
+		{
+			storage: SessionStorage{Client: client},
+			tests: []testCase{
+				{
+					id: "abc",
+					input: model.Session{
+						UserAgent: "Go/1.17",
+						Owner: model.Owner{
+							Id: "Golang",
+						},
+					},
+				},
+				{
+					id: "xyz",
+					input: model.Session{
+						UserAgent: "Go/1.17",
+						Owner: model.Owner{
+							Id: "Go",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -141,6 +165,18 @@ func TestStorage_Obtain(t *testing.T) {
 				},
 			},
 		},
+		{
+			storage: SessionStorage{Client: client},
+			tests: []testCase{
+				{
+					id: "",
+					input: model.Session{
+						UserAgent: "Go/1.17",
+						Owner:     model.Owner{Id: "foo"},
+					},
+				},
+			},
+		},
 	}
 
 	// Here starts unit tests
@@ -187,6 +223,7 @@ func TestStorage_Obtain(t *testing.T) {
 
 // TestStorage_Delete
 // Checks the functionality of the Delete method for different Storage interface implementations (StateStorage and OwnerStorage)
+// TODO makes a better testing for each implementation
 func TestStorage_Delete(t *testing.T) {
 	client, err := NewRedisClient(defaultRedisConfiguration)
 	if err != nil {
@@ -208,6 +245,7 @@ func TestStorage_Delete(t *testing.T) {
 	storages := []Storage{
 		StateStorage{Client: client},
 		OwnerStorage{Client: client},
+		SessionStorage{Client: client},
 	}
 
 	// Here starts unit tests

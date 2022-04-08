@@ -9,13 +9,14 @@ import (
 	"time"
 )
 
+// Constants for Authorization Code Life Time
 const (
 	MaximumAuthorizationCodeLifeTime = 10 * time.Minute
 	MediumAuthorizationCodeLifeTime  = MaximumAuthorizationCodeLifeTime / 2
 )
 
 // Storage defines a general store
-// For example: potato storage or client session storage
+// For example: potato storage or client storage
 type Storage interface {
 	// Create creates a record using the received data
 	Create(string, interface{}) error
@@ -85,29 +86,26 @@ func (s StateStorage) Delete(code string) error {
 	return s.Del(context.TODO(), s.authorizationKey(model.AuthorizationCode(code))).Err()
 }
 
-// _ "implement" constraint for *MockStateStore
-var _ Storage = (*MockStateStore)(nil)
+// _ "implement" constraint for *MockStorage
+var _ Storage = (*MockStorage)(nil)
 
-// MockStateStore store for model.Authorization
-type MockStateStore map[model.AuthorizationCode]model.Authorization
+// MockStorage store for model.Authorization
+type MockStorage map[string]interface{}
 
 // Create saves a model.Authorization in m
-func (m *MockStateStore) Create(code string, i interface{}) error {
-	auth := i.(model.Authorization)
-
-	(*m)[model.AuthorizationCode(code)] = auth
-
+func (m *MockStorage) Create(code string, i interface{}) error {
+	(*m)[code] = i
 	return nil
 }
 
 // Obtain search a model.Authorization by state
-func (m MockStateStore) Obtain(code string) (interface{}, error) {
-	return m[model.AuthorizationCode(code)], nil
+func (m MockStorage) Obtain(code string) (interface{}, error) {
+	return m[code], nil
 }
 
 // Delete removes a record by state
-func (m *MockStateStore) Delete(code string) error {
-	delete(*m, model.AuthorizationCode(code))
+func (m *MockStorage) Delete(code string) error {
+	delete(*m, code)
 	return nil
 }
 
@@ -150,23 +148,54 @@ func (o OwnerStorage) Delete(ownerId string) error {
 	return cmd.Err()
 }
 
+// _ "implement" constraint for SessionStorage
 var _ Storage = SessionStorage{}
 
+// SessionStorage storage for owner enabled sessions
 type SessionStorage struct {
-	redis.Client
+	*redis.Client
 }
 
-func (s SessionStorage) Create(jti string, session interface{}) error {
-	//TODO implement me
-	panic("implement me")
+// sessionKey creates a session key based on the token id
+func (s SessionStorage) sessionKey(tokenId string) string {
+	return "session:" + tokenId
 }
 
-func (s SessionStorage) Obtain(jti string) (interface{}, error) {
-	//TODO implement me
-	panic("implement me")
+// Create creates a record of model.Session with the received tokenId to
+func (s SessionStorage) Create(tokenId string, i interface{}) error {
+	session := i.(model.Session)
+
+	cmd := s.SetNX(context.TODO(), s.sessionKey(tokenId), model.BinaryJSON{I: session}, session.Expiration)
+
+	wasCreated, err := cmd.Result()
+	if err != nil {
+		return err
+	}
+
+	if !wasCreated {
+		err = model.DuplicateRecord(`session already exists`)
+	}
+
+	return err
 }
 
-func (s SessionStorage) Delete(s string) error {
-	//TODO implement me
-	panic("implement me")
+// Obtain search enabled session by token id
+func (s SessionStorage) Obtain(tokenId string) (i interface{}, err error) {
+	serialized, err := s.Get(context.TODO(), s.sessionKey(tokenId)).Result()
+
+	session := model.Session{}
+
+	err = json.Unmarshal([]byte(serialized), &session)
+	if err != nil {
+		return
+	}
+
+	i = session
+
+	return
+}
+
+// Delete revokes a session by token id
+func (s SessionStorage) Delete(tokenId string) error {
+	return s.Del(context.TODO(), s.sessionKey(tokenId)).Err()
 }
