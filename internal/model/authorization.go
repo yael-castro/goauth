@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+// Owner represents the person owner of protected resources
+type Owner struct {
+	// Id is the owner username
+	Id string
+	// Password works as owner id
+	Password string
+}
+
 // Authorization request of authorization following the protocol OAuth 2.0
 type Authorization struct {
 	// ClientId public application id
