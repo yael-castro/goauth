@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const MaximumAuthorizationCodeLifetime = 10 * time.Minute
+const (
+	MaximumAuthorizationCodeLifeTime = 10 * time.Minute
+	MediumAuthorizationCodeLifeTime  = MaximumAuthorizationCodeLifeTime / 2
+)
 
 // Storage defines a general store
 // For example: potato storage or client session storage
@@ -46,7 +49,7 @@ func (StateStorage) authorizationKey(code model.AuthorizationCode) string {
 func (s StateStorage) Create(code string, i interface{}) error {
 	auth := i.(model.Authorization)
 
-	cmd := s.SetNX(context.TODO(), s.authorizationKey(model.AuthorizationCode(code)), model.BinaryJSON{I: auth}, MaximumAuthorizationCodeLifetime)
+	cmd := s.SetNX(context.TODO(), s.authorizationKey(model.AuthorizationCode(code)), model.BinaryJSON{I: auth}, MediumAuthorizationCodeLifeTime)
 
 	flag, err := cmd.Result()
 	if err != nil {
@@ -106,4 +109,64 @@ func (m MockStateStore) Obtain(code string) (interface{}, error) {
 func (m *MockStateStore) Delete(code string) error {
 	delete(*m, model.AuthorizationCode(code))
 	return nil
+}
+
+// _ "implement" constraint for OwnerStorage
+var _ Storage = OwnerStorage{}
+
+// OwnerStorage is store for all data directly related to o
+type OwnerStorage struct {
+	*redis.Client
+}
+
+// ownerKey generates key to save the owner data
+func (o OwnerStorage) ownerKey(ownerId string) string {
+	return "owner:" + ownerId
+}
+
+// Create not implemented yet
+func (o OwnerStorage) Create(ownerId string, owner interface{}) error {
+	cmd := o.SetNX(context.TODO(), o.ownerKey(ownerId), owner.(model.Owner).Password, 0)
+
+	return cmd.Err()
+}
+
+// Obtain search a model.Owner by ownerId (user id)
+func (o OwnerStorage) Obtain(ownerId string) (i interface{}, err error) {
+	owner := model.Owner{Id: ownerId}
+
+	owner.Password, err = o.Get(context.TODO(), o.ownerKey(ownerId)).Result()
+	if err != nil {
+		return
+	}
+
+	i = owner
+	return
+}
+
+// Delete deletes a model.Owner by ownerId
+func (o OwnerStorage) Delete(ownerId string) error {
+	cmd := o.Del(context.TODO(), o.ownerKey(ownerId))
+	return cmd.Err()
+}
+
+var _ Storage = SessionStorage{}
+
+type SessionStorage struct {
+	redis.Client
+}
+
+func (s SessionStorage) Create(jti string, session interface{}) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s SessionStorage) Obtain(jti string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s SessionStorage) Delete(s string) error {
+	//TODO implement me
+	panic("implement me")
 }
