@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 
@@ -12,17 +14,28 @@ import (
 // the Authorization Code Grant flow described in the OAuth 2.0 protocol
 func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		redirectURL := &[]url.URL{*r.URL}[0]
-
 		if r.Method != http.MethodGet {
-			business.OAuthError(redirectURL, model.InvalidRequest, "method not allowed")
-			goto end
+			http.Error(w, "", http.StatusMethodNotAllowed)
+			return
+		}
+
+		media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
+			return
+		}
+
+		if media != "application/x-www-form-urlencoded" {
+			http.Error(w, fmt.Sprintf(`media "%s" is not supported`, media), http.StatusUnsupportedMediaType)
+			return
 		}
 
 		if err := r.ParseForm(); err != nil {
-			business.OAuthError(redirectURL, model.InvalidRequest, err.Error())
-			goto end
+			http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
+			return
 		}
+
+		redirectURL := &[]url.URL{*r.URL}[0]
 
 		if r.Form.Get("redirect_url") != "" {
 			redirect, err := url.Parse(r.Form.Get("redirect_url"))
@@ -30,6 +43,8 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 				redirectURL = redirect
 			}
 		}
+
+		username, password, _ := r.BasicAuth()
 
 		redirectURL = authorizer.Authorize(model.Authorization{
 			ClientId:            r.Form.Get("client_id"),
@@ -40,9 +55,12 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 			Scope:               r.Form.Get("scope"),
 			ResponseType:        r.Form.Get("response_type"),
 			RedirectURL:         redirectURL,
+			BasicAuth: model.Owner{
+				Id:       username,
+				Password: password,
+			},
 		})
 
-	end:
 		http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 	}
 }
