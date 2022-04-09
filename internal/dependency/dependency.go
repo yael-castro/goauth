@@ -58,25 +58,25 @@ func testingProfile(i interface{}) error {
 		return fmt.Errorf(`invalid type "%T"`, i)
 	}
 
-	redisSettings := repository.Configuration{
-		Type:     repository.KeyValue,
-		Host:     "localhost",
-		Port:     6379,
-		Database: "0",
-	}
-
-	redisClient, err := repository.NewRedisClient(redisSettings)
-	if err != nil {
-		return err
-	}
-
 	authorizer := business.OAuth{
 		"code": business.AuthorizationCodeGrant{
 			CodeGenerator: business.CodeGeneratorFunc(func() model.AuthorizationCode {
 				return "ABC"
 			}),
-			Finder:  repository.ClientFinder{Client: redisClient},
-			Storage: repository.StateStorage{Client: redisClient},
+			Authenticator: business.OwnerAuthenticator{
+				Storage: &repository.MockStorage{
+					"contacto@yael-castro.com": model.Owner{
+						Id:       "contacto@yael-castro.com",
+						Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
+					},
+				},
+			},
+			Finder: repository.MockClientFinder{
+				"mobile": model.Client{
+					Id: "mobile",
+				},
+			},
+			Storage: &repository.MockStorage{},
 			PKCE:    business.ProofKeyCodeExchange{},
 		},
 	}
