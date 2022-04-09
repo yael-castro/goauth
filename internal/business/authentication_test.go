@@ -8,7 +8,7 @@ import (
 )
 
 // TestProofKeyCodeExchange_Authorize
-// Test the implementation BCryptAuthenticator of Authenticator
+// Test the implementation OwnerAuthenticator of Authenticator
 func TestBCryptAuthenticator_Authenticate(t *testing.T) {
 	tdt := []struct {
 		input       interface{}
@@ -24,7 +24,7 @@ func TestBCryptAuthenticator_Authenticate(t *testing.T) {
 		},
 	}
 
-	authenticator := BCryptAuthenticator{
+	authenticator := OwnerAuthenticator{
 		Storage: &repository.MockStorage{
 			"contacto@yael-castro.com": model.Owner{
 				Id:       "contacto@yael-castro.com",

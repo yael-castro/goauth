@@ -14,18 +14,18 @@ type Authenticator interface {
 	Authenticate(interface{}) (bool, error)
 }
 
-// _ "implement" constraint for BCryptAuthenticator
-var _ Authenticator = BCryptAuthenticator{}
+// _ "implement" constraint for OwnerAuthenticator
+var _ Authenticator = OwnerAuthenticator{}
 
-type BCryptAuthenticator struct {
+type OwnerAuthenticator struct {
 	repository.Storage
 }
 
 // Authenticate validates a model.Owner to check if the password match to hashed password in database obtained by the owner id
-func (p BCryptAuthenticator) Authenticate(i interface{}) (ok bool, err error) {
+func (o OwnerAuthenticator) Authenticate(i interface{}) (ok bool, err error) {
 	owner := i.(model.Owner)
 
-	ownerData, err := p.Storage.Obtain(owner.Id)
+	ownerData, err := o.Storage.Obtain(owner.Id)
 	if _, ok := err.(model.NotFound); errors.Is(err, redis.Nil) || ok {
 		return false, nil
 	}

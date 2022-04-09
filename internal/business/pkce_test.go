@@ -131,7 +131,7 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 			return "ABC"
 		}),
 		Storage: &repository.MockStorage{},
-		Authenticator: BCryptAuthenticator{
+		Authenticator: OwnerAuthenticator{
 			Storage: &repository.MockStorage{
 				"contacto@yael-castro.com": model.Owner{
 					Id:       "contacto@yael-castro.com",
