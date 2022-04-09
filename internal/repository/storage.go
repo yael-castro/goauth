@@ -99,8 +99,13 @@ func (m *MockStorage) Create(code string, i interface{}) error {
 }
 
 // Obtain search a model.Authorization by state
-func (m MockStorage) Obtain(code string) (interface{}, error) {
-	return m[code], nil
+func (m MockStorage) Obtain(code string) (i interface{}, err error) {
+	i, ok := m[code]
+	if !ok {
+		err = model.NotFound(fmt.Sprintf(`missing a record id "%s"`, code))
+	}
+
+	return
 }
 
 // Delete removes a record by state
