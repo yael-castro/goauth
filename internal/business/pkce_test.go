@@ -34,6 +34,10 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 					uri, _ := url.Parse("http://localhost/callback")
 					return uri
 				}(),
+				BasicAuth: model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "yael.castro",
+				},
 			},
 			expectedURL: func() *url.URL {
 				uri, _ := url.Parse("http://localhost/callback?code=ABC&state=AAA")
@@ -43,8 +47,15 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		// Test case for invalid state
 		{
 			input: model.Authorization{
-				State:       "",
-				RedirectURL: &url.URL{},
+				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				RedirectURL: func() *url.URL {
+					uri, _ := url.Parse("http://localhost/callback")
+					return uri
+				}(),
+				BasicAuth: model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "yael.castro",
+				},
 			},
 			expectedErr: model.InvalidRequest.Error(),
 		},
@@ -59,8 +70,12 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		// Test case for invalid redirect url
 		{
 			input: model.Authorization{
-				State:       "CCC",
-				ClientId:    "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				State:    "CCC",
+				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				BasicAuth: model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "yael.castro",
+				},
 				RedirectURL: &url.URL{},
 			},
 			expectedErr: model.UnauthorizedClient.Error(),
@@ -70,6 +85,10 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 			input: model.Authorization{
 				State:    "DDD",
 				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				BasicAuth: model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "yael.castro",
+				},
 				RedirectURL: func() *url.URL {
 					uri, _ := url.Parse("http://localhost/callback")
 					return uri
@@ -80,8 +99,12 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		// Invalid code_challenge
 		{
 			input: model.Authorization{
-				State:    "EEE",
 				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				BasicAuth: model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "yael.castro",
+				},
+				State: "EEE",
 				RedirectURL: func() *url.URL {
 					uri, _ := url.Parse("http://localhost/callback")
 					return uri
@@ -108,6 +131,14 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 			return "ABC"
 		}),
 		Storage: &repository.MockStorage{},
+		Authenticator: BCryptAuthenticator{
+			Storage: &repository.MockStorage{
+				"contacto@yael-castro.com": model.Owner{
+					Id:       "contacto@yael-castro.com",
+					Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne",
+				},
+			},
+		},
 	}
 
 	for i, v := range tdt {

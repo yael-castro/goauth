@@ -37,6 +37,7 @@ type AuthorizationCodeGrant struct {
 	PKCE Authorizer
 	// CodeGenerator generate a code to save and validate the requests
 	CodeGenerator
+	Authenticator
 	repository.Storage
 	repository.Finder
 }
@@ -55,10 +56,6 @@ type AuthorizationCodeGrant struct {
 // the CodeGenerator
 func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	uri := auth.RedirectURL
-
-	if !auth.State.IsValid() {
-		return OAuthError(uri, model.InvalidRequest, "invalid state")
-	}
 
 	i, err := c.Finder.Find(auth.ClientId)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
@@ -82,7 +79,18 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 		return OAuthError(uri, model.UnauthorizedClient, fmt.Sprintf(`invalid redirect uri "%s"`, auth.RedirectURL.RawPath))
 	}
 
-	// TODO user authentication
+	ok, err := c.Authenticate(auth.BasicAuth)
+	if err != nil {
+		return OAuthError(uri, model.ServerError, err.Error())
+	}
+
+	if !ok {
+		return OAuthError(uri, model.AccessDenied, "authentication failed")
+	}
+
+	if !auth.State.IsValid() {
+		return OAuthError(uri, model.InvalidRequest, "invalid state")
+	}
 
 	// Proof Key for Code Exchange extension
 	if c.PKCE != nil {
@@ -93,13 +101,11 @@ func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 		}
 	}
 
+	// TODO validate the scope
+
 	code := c.GenerateCode()
 
 	if err := c.Storage.Create(string(code), auth); err != nil {
-		if _, ok := err.(model.DuplicateRecord); ok {
-			return OAuthError(uri, model.InvalidRequest, err.Error())
-		}
-
 		return OAuthError(uri, model.ServerError, err.Error())
 	}
 
