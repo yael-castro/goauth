@@ -37,7 +37,7 @@ type Authorization struct {
 	BasicAuth Owner `json:"-"`
 }
 
-// Client defines an allowed client to make request for the Authorization Server
+// Client defines the data of allowed client to make request for the Authorization Server
 type Client struct {
 	// Id public client identifier
 	Id string
@@ -45,6 +45,17 @@ type Client struct {
 	Secret string
 	// AllowedOrigins origins to which the client can be redirected
 	AllowedOrigins []string
+}
+
+// Application defines the credentials of client to can make authorization requests
+// Is a device like mobile, web app, desktop application or
+type Application struct {
+	// Id public client identifier
+	Id string
+	// Secret client password
+	Secret string
+	// RedirectURL requested uri to the app will redirected
+	RedirectURL *url.URL
 }
 
 // IsValidOrigin checks if the origin received as parameter match with some valid origin in AllowedOrigins
