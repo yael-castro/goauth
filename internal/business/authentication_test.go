@@ -34,17 +34,13 @@ func TestBCryptAuthenticator_Authenticate(t *testing.T) {
 	}
 
 	for i, v := range tdt {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			ok, err := authenticator.Authenticate(v.input)
+		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
+			err := authenticator.Authenticate(v.input)
 			if err != v.expectedErr {
 				t.Fatalf(`expected error "%v" but got "%v"`, v.expectedErr, err)
 			}
 
-			if ok != v.output {
-				t.Fatalf(`expected "%v" got "%v""`, v.output, ok)
-			}
-
-			t.Log(ok)
+			t.Log(err)
 		})
 	}
 }
