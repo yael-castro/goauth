@@ -7,9 +7,11 @@ import (
 	"github.com/yael-castro/godi/internal/handler"
 	"github.com/yael-castro/godi/internal/model"
 	"github.com/yael-castro/godi/internal/repository"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 // Profile defines options of dependency injection
@@ -58,22 +60,29 @@ func testingProfile(i interface{}) error {
 		return fmt.Errorf(`invalid type "%T"`, i)
 	}
 
+	random := rand.New(rand.NewSource(time.Now().Unix()))
+
 	authorizer := business.OAuth{
 		"code": business.AuthorizationCodeGrant{
 			CodeGenerator: business.CodeGeneratorFunc(func() model.AuthorizationCode {
-				return "ABC"
+				return model.AuthorizationCode(strconv.Itoa(random.Int()))
 			}),
-			Authenticator: business.OwnerAuthenticator{
+			Owner: business.OwnerAuthenticator{
 				Storage: &repository.MockStorage{
 					"contacto@yael-castro.com": model.Owner{
-						Id:       "contacto@yael-castro.com",
 						Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
 					},
 				},
 			},
-			Finder: repository.MockClientFinder{
-				"mobile": model.Client{
-					Id: "mobile",
+			Client: business.ClientAuthenticator{
+				Finder: repository.MockClientFinder{
+					"mobile": model.Client{
+						Id: "mobile",
+						AllowedOrigins: []string{
+							"http://localhost/callback",
+							"http://localhost:8080/callback",
+						},
+					},
 				},
 			},
 			Storage: &repository.MockStorage{},
@@ -115,10 +124,14 @@ func defaultProfile(i interface{}) error {
 	authorizer := business.OAuth{
 		"code": business.AuthorizationCodeGrant{
 			CodeGenerator: business.CodeGeneratorFunc(business.NewUUIDCode),
-			// OwnerFinder: ...
-			Finder:  repository.ClientFinder{Client: redisClient},
-			Storage: repository.StateStorage{Client: redisClient},
-			PKCE:    business.ProofKeyCodeExchange{},
+			Storage:       repository.StateStorage{Client: redisClient},
+			PKCE:          business.ProofKeyCodeExchange{},
+			Owner: business.OwnerAuthenticator{
+				Storage: repository.OwnerStorage{Client: redisClient},
+			},
+			Client: business.ClientAuthenticator{
+				Finder: repository.ClientFinder{Client: redisClient},
+			},
 		},
 	}
 
