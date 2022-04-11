@@ -2,6 +2,14 @@ package model
 
 import "fmt"
 
+// FailedAuthentication error caused by invalid credentials
+type FailedAuthentication string
+
+// Error returns the string value of FailedAuthentication
+func (a FailedAuthentication) Error() string {
+	return string(a)
+}
+
 // NotFound error caused by missing resource
 type NotFound string
 
