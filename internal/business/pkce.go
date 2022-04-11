@@ -2,7 +2,6 @@ package business
 
 import (
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/yael-castro/godi/internal/model"
 	"github.com/yael-castro/godi/internal/repository"
@@ -37,9 +36,9 @@ type AuthorizationCodeGrant struct {
 	PKCE Authorizer
 	// CodeGenerator generate a code to save and validate the requests
 	CodeGenerator
-	Authenticator
+	Owner  Authenticator
+	Client Authenticator
 	repository.Storage
-	repository.Finder
 }
 
 // Authorize validate the client model.Client obtained with the received data (model.Authorization)
@@ -57,35 +56,27 @@ type AuthorizationCodeGrant struct {
 func (c AuthorizationCodeGrant) Authorize(auth model.Authorization) *url.URL {
 	uri := auth.RedirectURL
 
-	i, err := c.Finder.Find(auth.ClientId)
-	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
-		return OAuthError(uri, model.UnauthorizedClient, fmt.Sprintf(`client "%s" does not exist`, auth.ClientId))
+	err := c.Client.Authenticate(model.Application{
+		Id:          auth.ClientId,
+		Secret:      auth.ClientSecret,
+		RedirectURL: auth.RedirectURL,
+	})
+
+	if _, ok := err.(model.FailedAuthentication); ok {
+		return OAuthError(uri, model.UnauthorizedClient, err.Error())
 	}
 
 	if err != nil {
 		return OAuthError(uri, model.ServerError, err.Error())
 	}
 
-	client := i.(model.Client)
-
-	if client.Secret != "" {
-		// TODO make a better validation for the client secret
-		if client.Secret != auth.ClientSecret {
-			return OAuthError(uri, model.UnauthorizedClient, "client credentials does not match")
-		}
+	err = c.Owner.Authenticate(auth.BasicAuth)
+	if _, ok := err.(model.FailedAuthentication); ok {
+		return OAuthError(uri, model.AccessDenied, err.Error())
 	}
 
-	if !client.IsValidOrigin(auth.RedirectURL.String()) {
-		return OAuthError(uri, model.UnauthorizedClient, fmt.Sprintf(`invalid redirect uri "%s"`, auth.RedirectURL.RawPath))
-	}
-
-	ok, err := c.Authenticate(auth.BasicAuth)
 	if err != nil {
 		return OAuthError(uri, model.ServerError, err.Error())
-	}
-
-	if !ok {
-		return OAuthError(uri, model.AccessDenied, "authentication failed")
 	}
 
 	if !auth.State.IsValid() {
