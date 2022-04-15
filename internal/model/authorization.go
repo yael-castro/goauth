@@ -17,10 +17,7 @@ type Owner struct {
 
 // Authorization request of authorization following the protocol OAuth 2.0
 type Authorization struct {
-	// ClientId public application id
-	ClientId string `json:"clientId,omitempty"`
-	// ClientSecret private application secret
-	ClientSecret string `json:"clientSecret,omitempty"`
+	Application
 	// Scope one or more scope values indicating additional access requested by the application (Optional)
 	Scope string `json:"scope,omitempty"`
 	// ResponseType expected response type (code, ...)
@@ -31,10 +28,9 @@ type Authorization struct {
 	// RedirectURL is not required by the spec, but your service should require it.
 	// This URL must match one of the URLs the developer registered when creating the application,
 	// and the authorization server should reject the request if it does not match (Optional)
-	RedirectURL *url.URL `json:"redirectURL,omitempty"`
 	// BasicAuth is not explicit part of the protocol OAuth 2.0
 	// but is a way to pass the owner credentials
-	BasicAuth Owner `json:"-"`
+	BasicAuth Owner `json:"basicAuth"`
 }
 
 // Client defines the data of allowed client to make request for the Authorization Server

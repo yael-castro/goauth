@@ -2,6 +2,14 @@ package model
 
 import "fmt"
 
+// ValidationError error caused by wrong validation
+type ValidationError string
+
+// Error returns the string value of ValidationError
+func (v ValidationError) Error() string {
+	return string(v)
+}
+
 // FailedAuthentication error caused by invalid credentials
 type FailedAuthentication string
 
