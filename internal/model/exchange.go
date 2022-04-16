@@ -70,8 +70,9 @@ type Session struct {
 // StandardClaims alias for jwt.StandardClaims
 type StandardClaims = jwt.StandardClaims
 
+// JWT JSON Web Token
 type JWT struct {
 	StandardClaims
-	UserId string
-	Scope  interface{}
+	// Scope indicates the permissions that the JWT has
+	Scope interface{} `json:"scp"`
 }
