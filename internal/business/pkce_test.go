@@ -144,7 +144,7 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		CodeGenerator:  GenerateRandomCode,
 		CodeStorage:    &repository.MockStorage{},
 		SessionStorage: &repository.MockStorage{},
-		ScopeParser:    MaskParser{},
+		ScopeParser:    NewScopeParser(),
 		Owner: OwnerAuthenticator{
 			Storage: &repository.MockStorage{
 				"contacto@yael-castro.com": model.Owner{
