@@ -10,13 +10,18 @@ import (
 
 // TestMaskParser_ParseScope check the correct functionality of the MaskParser structure and more specifically the method ParseScope
 func TestMaskParser_ParseScope(t *testing.T) {
-	parser := MaskParser{}
+	parser := NewScopeParser()
 
 	tdt := []struct {
 		input       string
 		output      interface{}
 		expectedErr error
 	}{
+		// Empty scope
+		{
+			input: "",
+		},
+		// Success build scope
 		{
 			input: "read:aa write:BB update:cc delete:DD",
 			output: model.Mask{
@@ -26,17 +31,20 @@ func TestMaskParser_ParseScope(t *testing.T) {
 				"delete": 0xdd,
 			},
 		},
+		// Malformed scope
 		{
 			input:       "r:1_w:2_u:3_d:4",
-			expectedErr: model.ValidationError("malformed permission requested"),
+			expectedErr: model.InvalidScope,
 		},
+		// Invalid scope
 		{
 			input:       "r:w",
-			expectedErr: model.ValidationError(`strconv.ParseUint: parsing "w": invalid syntax`),
+			expectedErr: model.InvalidScope,
 		},
+		// Scope out of range
 		{
 			input:       "r:80000000000000001",
-			expectedErr: model.ValidationError(`strconv.ParseUint: parsing "80000000000000001": value out of range`),
+			expectedErr: model.InvalidScope,
 		},
 	}
 

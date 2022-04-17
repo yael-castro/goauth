@@ -1,6 +1,7 @@
 package business
 
 import (
+	"fmt"
 	"github.com/yael-castro/godi/internal/model"
 	"strconv"
 	"strings"
@@ -11,15 +12,20 @@ type ScopeParser interface {
 	ParseScope(string) (interface{}, error)
 }
 
-// _ "implement" constraint for ScopeParser
-var _ ScopeParser = MaskParser{}
+func NewScopeParser() ScopeParser {
+	return maskParser{}
+}
 
-// MaskParser parse scopes (permissions) to a mask
-type MaskParser struct{}
+// maskParser parse scopes (permissions) to a mask
+type maskParser struct{}
 
 // ParseScope parses a string of hexadecimal values split by spaces to hash map where each key of hash map contains
 // unsigned integer values of 64 bits to be used as bit masks
-func (m MaskParser) ParseScope(str string) (interface{}, error) {
+func (m maskParser) ParseScope(str string) (interface{}, error) {
+	if str == "" {
+		return nil, nil
+	}
+
 	slice := strings.Split(str, " ")
 
 	mask := model.Mask{}
@@ -30,12 +36,12 @@ func (m MaskParser) ParseScope(str string) (interface{}, error) {
 		slice := strings.Split(v, ":")
 
 		if len(slice) != 2 {
-			return nil, model.ValidationError("malformed permission requested")
+			return nil, fmt.Errorf("%w: malformed permission requested", model.InvalidScope)
 		}
 
 		mask[slice[0]], err = strconv.ParseUint(slice[1], 16, 64)
 		if err != nil {
-			return nil, model.ValidationError(err.Error())
+			return nil, fmt.Errorf("%w: %s", model.InvalidScope, err.Error())
 		}
 	}
 
