@@ -17,7 +17,7 @@ var _ ScopeParser = MaskParser{}
 // MaskParser parse scopes (permissions) to a mask
 type MaskParser struct{}
 
-// ParseScope parses a string of hexadecimal values split by underscore to hash map where each key of hash map contains
+// ParseScope parses a string of hexadecimal values split by spaces to hash map where each key of hash map contains
 // unsigned integer values of 64 bits to be used as bit masks
 func (m MaskParser) ParseScope(str string) (interface{}, error) {
 	slice := strings.Split(str, " ")
