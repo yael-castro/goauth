@@ -22,9 +22,14 @@ type CodeExchanger interface {
 	ExchangeCode(model.Exchange) (model.Token, error)
 }
 
+// CodeGrant defines the interface related to the authorization code grant
+type CodeGrant interface {
+	Authorizer
+	CodeExchanger
+}
+
 // _ "implement" constraints for ProofKeyCodeExchange
-var _ Authorizer = (*AuthorizationCodeGrant)(nil)
-var _ CodeExchanger = (*AuthorizationCodeGrant)(nil)
+var _ CodeGrant = (*AuthorizationCodeGrant)(nil)
 
 // AuthorizationCodeGrant made the validations that correspond to the Authorization Code Grant flow
 type AuthorizationCodeGrant struct {
