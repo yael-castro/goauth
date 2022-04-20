@@ -1,0 +1,152 @@
+swagger: "2.0"
+info:
+  description: "This is an authorization server based on the OAuth 2.0 protocol"
+  version: "1.0.0"
+  title: "GOAuth - Authorization Server"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "contact@yael-castro.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "lets-auth.herokuapp.com"
+basePath: "/go-auth/v1"
+tags:
+- name: "Authorization"
+  description: "Everything about to authorization"
+  externalDocs:
+    description: "Find out more"
+    url: "https://localhost"
+- name: "Token"
+  description: "Everything related to access tokens"
+schemes:
+- "https"
+paths:
+  /authorization:
+    get:
+      tags:
+      - "Authorization"
+      summary: "Authorization to obtain an access token"
+      description: ""
+      operationId: "obtainAuthorization"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/html"
+      parameters:
+      - in: "query"
+        type: "string"
+        name: "response_type"
+        description: "Callback URI"
+        required: true
+        enum: 
+        - "code"
+      - in: "query"
+        type: "string"
+        name: "client_id"
+        description: "Application ID"
+        required: true
+      - in: "query"
+        type: "string"
+        name: "client_secret"
+        description: "Application Secret (Commonly used in private apps)"
+        required: false  
+      - in: "query"
+        type: "string"
+        name: "state"
+        description: "Request state"
+        required: true
+      - in: "query"
+        type: "string"
+        name: "redirect_uri"
+        description: "Callback URI"
+        required: false
+      - in: "query"
+        type: "string"
+        name: "code_challenge"
+        description: ""
+        required: true
+      - in: "query"
+        type: "string"
+        name: "code_challenge_method"
+        description: "Callback URI"
+        required: false
+        enum:
+          - "PLAIN"
+          - "S256"
+      - in: "query"
+        type: "string"
+        name: "scope"
+        pattern: "[0-9ABCDEF]+( [0-9ABCDEF]+)+"
+      responses:
+        "406":
+          description: ""
+          schema: 
+            type: "string"
+            example: "Unsupported mime type"
+        "302":
+          description: "<a href='https://localhost/callback?code=123&state=abc'>Found</a>"
+      security:
+      - basicAuth: []
+  /token:
+    post:
+      tags:
+      - "Token"
+      summary: "Authorization to obtain an access token"
+      description: ""
+      operationId: "obtainToken"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "query"
+        type: "string"
+        name: "client_id"
+        description: "Application ID"
+        required: true
+      - in: "query"
+        type: "string"
+        name: "state"
+        description: "Request state"
+        required: false
+      - in: "query"
+        type: "string"
+        name: "code_verfier"
+        description: "Code verifier of code challenge"
+        required: false
+      - in: "query"
+        type: "string"
+        name: "redirect_uri"
+        description: "Callback URI"
+        required: false  
+      responses:
+        "201":
+          schema:
+            "$ref": "#/definitions/Token"
+          description: "<a href='https://localhost/callback?code=123&state=abc'>Found</a>"
+          
+securityDefinitions:
+  basicAuth:
+    type: "basic"
+
+definitions:
+  Token:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+      accessToken:
+        type: "string"
+      expiresIn:
+        type: "integer"
+        format: "int64"
+    example:
+      type: "Bearer"
+      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+      expiresIn: 0
+    xml:
+      name: "Tag"
+externalDocs:
+  description: "Golang Documentation"
+  url: "https://pkg.go.dev/github.com/yael-castro/go-auth"
