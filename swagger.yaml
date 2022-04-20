@@ -149,4 +149,4 @@ definitions:
       name: "Tag"
 externalDocs:
   description: "Golang Documentation"
-  url: "https://pkg.go.dev/github.com/yael-castro/go-auth"
+  url: "https://pkg.go.dev/github.com/yael-castro/goauth"
