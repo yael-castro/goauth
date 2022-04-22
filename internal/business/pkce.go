@@ -52,6 +52,11 @@ type AuthorizationCodeGrant struct {
 // then if the record exists, the model.State, model.CodeChallenge
 func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model.Token, err error) {
 	// TODO validates the grant_type
+	if exchange.GrantType != "" {
+		err = fmt.Errorf("%w: grant type '%s' is not supported", model.UnsupportedResponseType, exchange.GrantType)
+		return
+	}
+
 	i, err := c.CodeStorage.Obtain(string(exchange.AuthorizationCode))
 	if err != nil {
 		return
@@ -72,6 +77,9 @@ func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model
 	if authorization.Application.Id != exchange.ClientId {
 		return model.Token{}, errors.New("client_id does not match")
 	}
+
+	authorization.RedirectURL.RawQuery = ""
+	exchange.RedirectURL.RawQuery = ""
 
 	if path.Join(authorization.RedirectURL.String()) != path.Join(exchange.RedirectURL.String()) {
 		return model.Token{}, fmt.Errorf("%w: redirect_uri does not match to the first redirect_uri", model.AccessDenied)
@@ -125,6 +133,9 @@ func (c AuthorizationCodeGrant) Authorize(a model.Authorization) (code model.Aut
 	if a.ResponseType != "code" {
 		return "", fmt.Errorf(`%w: "%s" is not supported`, model.UnsupportedResponseType, a.ResponseType)
 	}
+
+	// Cleaning query params
+	a.RedirectURL.RawQuery = ""
 
 	err = c.Client.Authenticate(a.Application)
 	if err != nil {
