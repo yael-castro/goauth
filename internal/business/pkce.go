@@ -56,6 +56,8 @@ func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model
 		err = fmt.Errorf("%w: grant type '%s' is not supported", model.UnsupportedResponseType, exchange.GrantType)
 		return
 	}
+	
+	exchange.RedirectURL.RawQuery = ""
 
 	i, err := c.CodeStorage.Obtain(string(exchange.AuthorizationCode))
 	if err != nil {
