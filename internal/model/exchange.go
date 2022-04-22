@@ -11,7 +11,8 @@ import (
 
 // Exchange contains the required data to exchange an authorization code for a token
 type Exchange struct {
-	ClientId string
+	GrantType string
+	ClientId  string
 	AuthorizationCode
 	CodeVerifier
 	State
