@@ -22,6 +22,7 @@ func NewServeMux(grant business.CodeGrant) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/go-auth/v1/authorization", NewAuthorizationHandler(grant))
+	mux.HandleFunc("/go-auth/v1/token", NewTokenHandler(grant))
 
 	return mux
 }
