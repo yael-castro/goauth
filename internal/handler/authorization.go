@@ -46,7 +46,12 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 			}
 		}
 
-		username, password, _ := r.BasicAuth()
+		username, password, ok := r.BasicAuth()
+		if !ok {
+			w.Header().Set("WWW-Authenticate", "Basic")
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
 
 		a := model.Authorization{
 			Application: model.Application{
