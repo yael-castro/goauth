@@ -3,12 +3,12 @@ info:
   description: "This is an authorization server based on the OAuth 2.0 protocol"
   version: "1.0.0"
   title: "GOAuth - Authorization Server"
-  termsOfService: "http://swagger.io/terms/"
+  termsOfService: "https://swagger.io/terms/"
   contact:
     email: "contact@yael-castro.com"
   license:
     name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+    url: "https://www.apache.org/licenses/LICENSE-2.0.html"
 host: "lets-auth.herokuapp.com"
 basePath: "/go-auth/v1"
 tags:
