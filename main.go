@@ -19,7 +19,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	err := dependency.NewInjector(dependency.Testing).Inject(mux)
+	err := dependency.NewInjector(dependency.Default).Inject(mux)
 	if err != nil {
 		log.Fatal(err)
 	}
