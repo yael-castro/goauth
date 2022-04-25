@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"mime"
 	"net/http"
 	"net/url"
 
-	"github.com/yael-castro/godi/internal/business"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/goauth/internal/business"
+	"github.com/yael-castro/goauth/internal/model"
 )
 
 // NewAuthorizationHandler creates a http.HandleFunc using a business.Authorizer to handle authorization requests in
@@ -31,35 +33,61 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		redirectURL := &[]url.URL{*r.URL}[0]
 
-		if r.Form.Get("redirect_url") != "" {
-			redirect, err := url.Parse(r.Form.Get("redirect_url"))
+		if r.Form.Get("redirect_uri") != "" {
+			redirect, err := url.Parse(r.Form.Get("redirect_uri"))
 			if err == nil {
 				redirectURL = redirect
 			}
 		}
 
-		username, password, _ := r.BasicAuth()
+		username, password, ok := r.BasicAuth()
+		if !ok {
+			w.Header().Set("WWW-Authenticate", "Basic")
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
 
-		redirectURL = authorizer.Authorize(model.Authorization{
-			ClientId:            r.Form.Get("client_id"),
-			ClientSecret:        r.Form.Get("client_secret"),
+		a := model.Authorization{
+			Application: model.Application{
+				Id:          r.Form.Get("client_id"),
+				Secret:      r.Form.Get("client_secret"),
+				RedirectURL: redirectURL,
+			},
 			State:               model.State(r.Form.Get("state")),
 			CodeChallenge:       model.CodeChallenge(r.Form.Get("code_challenge")),
 			CodeChallengeMethod: model.CodeChallengeMethod(r.Form.Get("code_challenge_method")),
 			Scope:               r.Form.Get("scope"),
 			ResponseType:        r.Form.Get("response_type"),
-			RedirectURL:         redirectURL,
 			BasicAuth: model.Owner{
 				Id:       username,
 				Password: password,
 			},
-		})
+		}
+
+		oauthErr := model.OAuthError(0)
+
+		code, err := authorizer.Authorize(a)
+		log.Println(err)
+
+		switch {
+		case errors.As(err, &oauthErr):
+			OAuthError(redirectURL, oauthErr, err.Error())
+
+		case err != nil:
+			OAuthError(redirectURL, model.ServerError, err.Error())
+
+		default:
+			redirectURL.RawQuery = url.Values{
+				"code":  {string(code)},
+				"state": {string(a.State)},
+			}.Encode()
+		}
 
 		http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 	}

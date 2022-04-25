@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/goauth/internal/model"
 	"reflect"
 	"strconv"
 	"testing"

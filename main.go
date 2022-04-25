@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/yael-castro/godi/internal/dependency"
+	"github.com/yael-castro/goauth/internal/dependency"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +19,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	err := dependency.NewInjector(dependency.Testing).Inject(mux)
+	err := dependency.NewInjector(dependency.Default).Inject(mux)
 	if err != nil {
 		log.Fatal(err)
 	}

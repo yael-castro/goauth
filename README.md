@@ -26,40 +26,44 @@ internal
 ```
       
 ###### Required environment variables
-<table>
-    <tr>
-        <th>Variable</th>
-        <th>Required value</th>
-        <th>Default value</th>
-    </tr>
-    <tr>
-        <td>PORT</td>
-        <td>Integer</td>
-        <td>8080</td>
-    </tr>
-    <tr>
-        <td>REDIS_HOST</td>
-        <td>String</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>REDIS_PORT</td>
-        <td>Integer</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>REDIS_USER</td>
-        <td>String</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>REDIS_PASSWORD</td>
-        <td>String</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>REDIS_DATABASE</td>
-        <td>Integer</td>
-        <td></td>
-    </tr>
-</table>
+[.env file example](./.env.example)
+
+###### Configure your own private RSA key
+```shell
+export PRIVATE_RSA_KEY="$(openssl genrsa 1024)"
+```
+
+###### How to try
+```go
+package main
+
+import (
+	"github.com/yael-castro/goauth/internal/dependency"
+	"log"
+	"net/http"
+	"os"
+)
+
+const defaultPort = "8080"
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	log.SetFlags(log.Flags() | log.Lshortfile)
+
+	mux := http.NewServeMux()
+
+	// Using dependency injection test profile you can test the server
+	// without any configuration
+	err := dependency.NewInjector(dependency.Testing).Inject(mux)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf(`http server is running on port "%v" %v`, port, "🤘\n")
+	log.Fatal(http.ListenAndServe(":"+port, mux))
+}
+```

@@ -1,11 +1,10 @@
 package business
 
 import (
-	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
+	"github.com/yael-castro/goauth/internal/model"
+	"github.com/yael-castro/goauth/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,8 +26,8 @@ func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 	owner := i.(model.Owner)
 
 	ownerData, err := o.Storage.Obtain(owner.Id)
-	if _, ok := err.(model.NotFound); errors.Is(err, redis.Nil) || ok {
-		err = model.FailedAuthentication(fmt.Sprintf(`owner "%s" does not exists`, owner.Id))
+	if _, ok := err.(model.NotFound); err == redis.Nil || ok {
+		err = fmt.Errorf(`%w: owner "%s" does not exists`, model.AccessDenied, owner.Id)
 	}
 
 	if err != nil {
@@ -39,7 +38,7 @@ func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 
 	ok := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(owner.Password)) == nil
 	if !ok {
-		err = model.FailedAuthentication("invalid owner")
+		err = fmt.Errorf("%w: invalid owner", model.AccessDenied)
 	}
 
 	return
@@ -60,7 +59,7 @@ func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
 
 	data, err := c.Finder.Find(application.Id)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
-		return model.FailedAuthentication(fmt.Sprintf(`client "%s" does not exist`, application.Id))
+		return fmt.Errorf(`%w: client "%s" does not exist`, model.UnauthorizedClient, application.Id)
 	}
 
 	if err != nil {
@@ -70,7 +69,7 @@ func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
 	savedClient := data.(model.Client)
 
 	if !savedClient.IsValidOrigin(application.RedirectURL.String()) {
-		err = model.FailedAuthentication("invalid redirect_uri")
+		err = fmt.Errorf("%w: invalid redirect_uri", model.UnauthorizedClient)
 	}
 
 	return

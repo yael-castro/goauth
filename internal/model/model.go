@@ -20,6 +20,9 @@ func (b BinaryJSON) MarshalBinary() ([]byte, error) {
 	return json.Marshal(b.I)
 }
 
+// Mask defines a mask that contains multiple bit masks
+type Mask map[string]uint64
+
 // NewIP constructor for IP
 // Parse an IP from string
 func NewIP(str string) (ip IP, err error) {
@@ -53,6 +56,7 @@ type IP [4]byte
 // String transforms an IP to string
 //
 // Example:
+//
 //     xxx.xxx.xxx.xxx
 func (i IP) String() string {
 	itoa := strconv.Itoa

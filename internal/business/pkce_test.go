@@ -1,9 +1,9 @@
 package business
 
 import (
-	"fmt"
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
+	"errors"
+	"github.com/yael-castro/goauth/internal/model"
+	"github.com/yael-castro/goauth/internal/repository"
 	"net/url"
 	"strconv"
 	"testing"
@@ -18,100 +18,112 @@ import (
 func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 	tdt := []struct {
 		input       model.Authorization
-		expectedURL *url.URL
-		expectedErr string
+		expectedErr error
 	}{
 		// Success test case
 		{
 			input: model.Authorization{
-				State:               "AAA",
-				ClientId:            "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
-				ResponseType:        "code",
-				CodeChallenge:       "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_~BCDEE",
-				CodeChallengeMethod: "PLAIN",
-				Scope:               "http://localhost/private",
-				RedirectURL: func() *url.URL {
-					uri, _ := url.Parse("http://localhost/callback")
-					return uri
-				}(),
+				ResponseType: "code",
+				Application: model.Application{
+					Id: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+					RedirectURL: func() *url.URL {
+						uri, _ := url.Parse("http://localhost/callback")
+						return uri
+					}(),
+				},
 				BasicAuth: model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "yael.castro",
 				},
+				State:               "AAA",
+				Scope:               "read:ff write:afa",
+				CodeChallenge:       "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_~BCDEE",
+				CodeChallengeMethod: "PLAIN",
 			},
-			expectedURL: func() *url.URL {
-				uri, _ := url.Parse("http://localhost/callback?code=ABC&state=AAA")
-				return uri
-			}(),
 		},
 		// Test case for invalid state
 		{
 			input: model.Authorization{
-				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
-				RedirectURL: func() *url.URL {
-					uri, _ := url.Parse("http://localhost/callback")
-					return uri
-				}(),
+				ResponseType: "code",
+				Application: model.Application{
+					Id: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+					RedirectURL: func() *url.URL {
+						uri, _ := url.Parse("http://localhost/callback")
+						return uri
+					}(),
+				},
 				BasicAuth: model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "yael.castro",
 				},
 			},
-			expectedErr: model.InvalidRequest.Error(),
+			expectedErr: model.InvalidRequest,
 		},
 		// Test case for invalid client id
 		{
 			input: model.Authorization{
-				State:       "BBB",
-				RedirectURL: &url.URL{},
+				ResponseType: "code",
+				Application: model.Application{
+					RedirectURL: &url.URL{},
+				},
+				State: "BBB",
 			},
-			expectedErr: model.UnauthorizedClient.Error(),
+			expectedErr: model.UnauthorizedClient,
 		},
 		// Test case for invalid redirect url
 		{
 			input: model.Authorization{
-				State:    "CCC",
-				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				ResponseType: "code",
+				Application: model.Application{
+					Id:          "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+					RedirectURL: &url.URL{},
+				},
 				BasicAuth: model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "yael.castro",
 				},
-				RedirectURL: &url.URL{},
+				State: "CCC",
 			},
-			expectedErr: model.UnauthorizedClient.Error(),
+			expectedErr: model.UnauthorizedClient,
 		},
 		// Invalid code_challenge_method
 		{
 			input: model.Authorization{
-				State:    "DDD",
-				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				ResponseType: "code",
+				Application: model.Application{
+					Id: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+					RedirectURL: func() *url.URL {
+						uri, _ := url.Parse("http://localhost/callback")
+						return uri
+					}(),
+				},
 				BasicAuth: model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "yael.castro",
 				},
-				RedirectURL: func() *url.URL {
-					uri, _ := url.Parse("http://localhost/callback")
-					return uri
-				}(),
+				State: "DDD",
 			},
-			expectedErr: model.InvalidRequest.Error(),
+			expectedErr: model.InvalidRequest,
 		},
 		// Invalid code_challenge
 		{
 			input: model.Authorization{
-				ClientId: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+				ResponseType: "code",
+				Application: model.Application{
+					Id: "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
+					RedirectURL: func() *url.URL {
+						uri, _ := url.Parse("http://localhost/callback")
+						return uri
+					}(),
+				},
 				BasicAuth: model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "yael.castro",
 				},
-				State: "EEE",
-				RedirectURL: func() *url.URL {
-					uri, _ := url.Parse("http://localhost/callback")
-					return uri
-				}(),
+				State:               "EEE",
 				CodeChallengeMethod: "S256",
 			},
-			expectedErr: model.InvalidRequest.Error(),
+			expectedErr: model.InvalidRequest,
 		},
 	}
 
@@ -129,10 +141,10 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 				},
 			},
 		},
-		CodeGenerator: CodeGeneratorFunc(func() model.AuthorizationCode {
-			return "ABC"
-		}),
-		Storage: &repository.MockStorage{},
+		CodeGenerator:  GenerateRandomCode,
+		CodeStorage:    &repository.MockStorage{},
+		SessionStorage: &repository.MockStorage{},
+		ScopeParser:    NewScopeParser(),
 		Owner: OwnerAuthenticator{
 			Storage: &repository.MockStorage{
 				"contacto@yael-castro.com": model.Owner{
@@ -145,25 +157,17 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 
 	for i, v := range tdt {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-			uri := authorizer.Authorize(v.input)
+			code, err := authorizer.Authorize(v.input)
 
-			err := uri.Query().Get("error")
-			errDescription := uri.Query().Get("error_description")
-
-			if err != fmt.Sprint(v.expectedErr) {
-				t.Error(errDescription)
+			if !errors.Is(err, v.expectedErr) {
 				t.Fatalf(`expected error "%v" got "%v"`, v.expectedErr, err)
 			}
 
-			if err != "" {
-				t.Skipf("%v => %v", err, errDescription)
+			if err != nil {
+				t.Skipf("%v => %v", errors.Unwrap(err), err)
 			}
 
-			if uri.String() != v.expectedURL.String() {
-				t.Fatalf(`unexpected redirect uri "%v"`, uri)
-			}
-
-			t.Log(uri)
+			t.Log(code)
 		})
 	}
 }
