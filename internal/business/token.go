@@ -3,7 +3,7 @@ package business
 import (
 	"crypto/rsa"
 	"github.com/golang-jwt/jwt"
-	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/goauth/internal/model"
 )
 
 // TokenGenerator defines a provider of token generated from some data

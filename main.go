@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/yael-castro/go-auth/internal/dependency"
+	"github.com/yael-castro/goauth/internal/dependency"
 	"log"
 	"net/http"
 	"os"

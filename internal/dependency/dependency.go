@@ -3,10 +3,10 @@ package dependency
 
 import (
 	"fmt"
-	"github.com/yael-castro/go-auth/internal/business"
-	"github.com/yael-castro/go-auth/internal/handler"
-	"github.com/yael-castro/go-auth/internal/model"
-	"github.com/yael-castro/go-auth/internal/repository"
+	"github.com/yael-castro/goauth/internal/business"
+	"github.com/yael-castro/goauth/internal/handler"
+	"github.com/yael-castro/goauth/internal/model"
+	"github.com/yael-castro/goauth/internal/repository"
 	"net/http"
 	"os"
 	"strconv"

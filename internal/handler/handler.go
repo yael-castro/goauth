@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/yael-castro/go-auth/internal/business"
+	"github.com/yael-castro/goauth/internal/business"
 	"net/http"
 	"net/url"
 )

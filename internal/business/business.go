@@ -2,7 +2,7 @@ package business
 
 import (
 	"github.com/google/uuid"
-	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/goauth/internal/model"
 	"math/rand"
 	"strconv"
 	"time"

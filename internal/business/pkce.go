@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/yael-castro/go-auth/internal/model"
-	"github.com/yael-castro/go-auth/internal/repository"
+	"github.com/yael-castro/goauth/internal/model"
+	"github.com/yael-castro/goauth/internal/repository"
 	"path"
 	"time"
 )

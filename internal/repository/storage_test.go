@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/goauth/internal/model"
 	"net/url"
 	"reflect"
 	"strconv"

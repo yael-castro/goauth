@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/yael-castro/go-auth/internal/business"
-	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/goauth/internal/business"
+	"github.com/yael-castro/goauth/internal/model"
 )
 
 // NewAuthorizationHandler creates a http.HandleFunc using a business.Authorizer to handle authorization requests in
