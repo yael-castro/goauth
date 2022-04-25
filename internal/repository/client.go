@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/go-auth/internal/model"
 )
 
 // Finder defines a finder for saved data in some storage

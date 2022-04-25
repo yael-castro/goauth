@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/yael-castro/godi/internal/business"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/go-auth/internal/business"
+	"github.com/yael-castro/go-auth/internal/model"
 	"log"
 	"mime"
 	"net/http"

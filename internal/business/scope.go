@@ -2,7 +2,7 @@ package business
 
 import (
 	"fmt"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/go-auth/internal/model"
 	"strconv"
 	"strings"
 )

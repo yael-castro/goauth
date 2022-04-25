@@ -3,8 +3,8 @@ package business
 import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
+	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/go-auth/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 

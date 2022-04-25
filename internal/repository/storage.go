@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/yael-castro/godi/internal/model"
+	"github.com/yael-castro/go-auth/internal/model"
 	"time"
 )
 

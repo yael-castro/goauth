@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
+	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/go-auth/internal/repository"
 	"path"
 	"time"
 )
@@ -56,7 +56,7 @@ func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model
 		err = fmt.Errorf("%w: grant type '%s' is not supported", model.UnsupportedResponseType, exchange.GrantType)
 		return
 	}
-	
+
 	exchange.RedirectURL.RawQuery = ""
 
 	i, err := c.CodeStorage.Obtain(string(exchange.AuthorizationCode))

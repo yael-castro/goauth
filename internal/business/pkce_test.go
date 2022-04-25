@@ -2,8 +2,8 @@ package business
 
 import (
 	"errors"
-	"github.com/yael-castro/godi/internal/model"
-	"github.com/yael-castro/godi/internal/repository"
+	"github.com/yael-castro/go-auth/internal/model"
+	"github.com/yael-castro/go-auth/internal/repository"
 	"net/url"
 	"strconv"
 	"testing"

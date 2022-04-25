@@ -1,4 +1,4 @@
-module github.com/yael-castro/godi
+module github.com/yael-castro/go-auth
 
 go 1.17
 
