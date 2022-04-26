@@ -82,6 +82,7 @@ func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model
 		return model.Token{}, errors.New("client_id does not match")
 	}
 
+	// TODO tool to compare the Redirect URLs
 	authorization.RedirectURL.RawQuery = ""
 	exchange.RedirectURL.RawQuery = ""
 

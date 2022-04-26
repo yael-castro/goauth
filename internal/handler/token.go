@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/yael-castro/goauth/internal/business"
 	"github.com/yael-castro/goauth/internal/model"
@@ -10,7 +10,9 @@ import (
 	"net/url"
 )
 
-// NewTokenHandler handler
+// NewTokenHandler handle all requests made to obtain an authorization token
+//
+// Is the HTTP handler for the token endpoint in the OAuth 2.0 framework
 func NewTokenHandler(exchanger business.CodeExchanger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -62,13 +64,15 @@ func NewTokenHandler(exchanger business.CodeExchanger) http.HandlerFunc {
 		}
 
 		token, err := exchanger.ExchangeCode(exchange)
-		switch {
-		case err != nil:
+		switch err := errors.Unwrap(err); err {
+		case model.UnauthorizedClient, model.AccessDenied:
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+		case model.InvalidRequest, model.InvalidScope, model.UnsupportedResponseType:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case nil:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		default:
-			w.WriteHeader(http.StatusOK)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(token)
+			JSON(w, http.StatusCreated, token)
 		}
 	}
 }
