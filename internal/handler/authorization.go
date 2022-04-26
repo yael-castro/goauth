@@ -3,7 +3,6 @@ package handler
 import (
 	"errors"
 	"fmt"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -26,6 +25,10 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
 			return
 		}
+
+		//if media == "" {
+		// TODO do content negotiation to render the page?
+		//}
 
 		if media != "application/x-www-form-urlencoded" {
 			http.Error(w, fmt.Sprintf(`media "%s" is not supported`, media), http.StatusUnsupportedMediaType)
@@ -73,8 +76,6 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 		oauthErr := model.OAuthError(0)
 
 		code, err := authorizer.Authorize(a)
-		log.Println(err)
-
 		switch {
 		case errors.As(err, &oauthErr):
 			OAuthError(redirectURL, oauthErr, err.Error())
