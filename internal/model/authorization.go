@@ -25,9 +25,6 @@ type Authorization struct {
 	State               `json:"state,omitempty"`
 	CodeChallenge       `json:"codeChallenge,omitempty"`
 	CodeChallengeMethod `json:"codeChallengeMethod,omitempty"`
-	// RedirectURL is not required by the spec, but your service should require it.
-	// This URL must match one of the URLs the developer registered when creating the application,
-	// and the authorization server should reject the request if it does not match (Optional)
 	// BasicAuth is not explicit part of the protocol OAuth 2.0
 	// but is a way to pass the owner credentials
 	BasicAuth Owner `json:"basicAuth"`
@@ -50,7 +47,9 @@ type Application struct {
 	Id string
 	// Secret client password
 	Secret string
-	// RedirectURL requested uri to the app will redirected
+	// RedirectURL is not required by the spec, but your service should require it.
+	// This URL must match one of the URLs the developer registered when creating the application,
+	// and the authorization server should reject the request if it does not match (Optional)
 	RedirectURL *url.URL
 }
 

@@ -12,7 +12,7 @@ import (
 // Exchange contains the required data to exchange an authorization code for a token
 type Exchange struct {
 	GrantType string
-	ClientId  string
+	Application
 	AuthorizationCode
 	CodeVerifier
 	State
@@ -26,6 +26,7 @@ type Exchange struct {
 // (Contains the token and token metadata)
 type Token struct {
 	// Type indicates the token type
+	//
 	// Example: Bearer or Basic
 	Type string `json:"type,omitempty"`
 	// AccessToken: is the token returned
