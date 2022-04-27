@@ -1,7 +1,7 @@
 # GOAuth - Authorization server
 [![Icon](./doc/images/banner.png)](https://github.com/yael-castro)
-
 [![Go Report Card](https://goreportcard.com/badge/github.com/yael-castro/goauth)](https://goreportcard.com/report/github.com/yael-castro/goauth)
+
 
 Authorization server based on the [Authorization Code Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1) with the extension [Proof Key for Code Exchange (PKCE)](https://datatracker.ietf.org/doc/html/rfc7636) of the protocol [OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc6749)
 
@@ -67,3 +67,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
 ```
+
+<hr>
+<a href="https://www.flaticon.com/free-icons/authentication" title="authentication icons">Authentication icons created by alkhalifi design - Flaticon</a>
