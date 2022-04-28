@@ -65,7 +65,7 @@ func NewTokenHandler(exchanger business.CodeExchanger) http.HandlerFunc {
 
 		token, err := exchanger.ExchangeCode(exchange)
 		switch err := errors.Unwrap(err); err {
-		case model.UnauthorizedClient, model.AccessDenied:
+		case model.UnauthorizedClient:
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 		case model.InvalidRequest, model.InvalidScope, model.UnsupportedResponseType:
 			http.Error(w, err.Error(), http.StatusBadRequest)
