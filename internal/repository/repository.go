@@ -1,6 +1,14 @@
 package repository
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/yael-castro/goauth/internal/model"
+)
+
+// Key defines the possible keys that can be used as
+type Key interface {
+	string | int | model.UUID
+}
 
 // Type defines the repository type
 type Type uint

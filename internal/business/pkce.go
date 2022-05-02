@@ -43,9 +43,9 @@ type AuthorizationCodeGrant struct {
 	Owner  Authenticator
 	Client Authenticator
 	// CodeStorage store for all exchange codes generated
-	CodeStorage repository.Storage
+	CodeStorage repository.Storage[string, model.Authorization]
 	// SessionStorage store for all exchange codes
-	SessionStorage repository.Storage
+	SessionStorage repository.Storage[string, model.Session]
 }
 
 // ExchangeCode using the model.Exchange search a record of mode.Authorization using the model.AuthorizationCode
@@ -61,12 +61,10 @@ func (c AuthorizationCodeGrant) ExchangeCode(exchange model.Exchange) (tkn model
 		return
 	}
 
-	i, err := c.CodeStorage.Obtain(string(exchange.AuthorizationCode))
+	authorization, err := c.CodeStorage.Obtain(string(exchange.AuthorizationCode))
 	if err != nil {
 		return
 	}
-
-	authorization := i.(model.Authorization)
 
 	if authorization.State != exchange.State {
 		return model.Token{}, fmt.Errorf("%w: state does not match", model.AccessDenied)

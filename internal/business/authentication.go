@@ -18,14 +18,14 @@ type Authenticator interface {
 var _ Authenticator = OwnerAuthenticator{}
 
 type OwnerAuthenticator struct {
-	repository.Storage
+	repository.Storage[string, model.Owner]
 }
 
 // Authenticate validates a model.Owner to check if the password match to hashed password in database obtained by the owner id
 func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 	owner := i.(model.Owner)
 
-	ownerData, err := o.Storage.Obtain(owner.Id)
+	savedOwner, err := o.Storage.Obtain(owner.Id)
 	if _, ok := err.(model.NotFound); err == redis.Nil || ok {
 		err = fmt.Errorf(`%w: owner "%s" does not exists`, model.AccessDenied, owner.Id)
 	}
@@ -34,7 +34,7 @@ func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 		return
 	}
 
-	hashedPassword := ownerData.(model.Owner).Password
+	hashedPassword := savedOwner.Password
 
 	ok := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(owner.Password)) == nil
 	if !ok {

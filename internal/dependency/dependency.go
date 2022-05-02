@@ -79,7 +79,7 @@ trcoqHkRGY43kVrARGwxQDv6+MGlWLCQ2m9p/mNv
 		ScopeParser:    business.NewScopeParser(),
 		CodeGenerator:  business.GenerateRandomCode,
 		Owner: business.OwnerAuthenticator{
-			Storage: &repository.MockStorage{
+			Storage: &repository.MockStorage[string, model.Owner]{
 				"contacto@yael-castro.com": model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
@@ -97,8 +97,8 @@ trcoqHkRGY43kVrARGwxQDv6+MGlWLCQ2m9p/mNv
 				},
 			},
 		},
-		CodeStorage:    &repository.MockStorage{},
-		SessionStorage: &repository.MockStorage{},
+		CodeStorage:    &repository.MockStorage[string, model.Authorization]{},
+		SessionStorage: &repository.MockStorage[string, model.Session]{},
 		PKCE:           business.ProofKeyCodeExchange{},
 	}
 

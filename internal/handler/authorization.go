@@ -27,7 +27,7 @@ func NewAuthorizationHandler(authorizer business.Authorizer) http.HandlerFunc {
 		}
 
 		//if media == "" {
-		// TODO do content negotiation to render the page?
+		// TODO do content negotiation to render the login page?
 		//}
 
 		if media != "application/x-www-form-urlencoded" {
