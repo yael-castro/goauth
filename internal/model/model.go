@@ -5,8 +5,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
+// UUID alias for uuid.UUID
+type UUID = uuid.UUID
+
+// Map defines a hash map to create unique structures
 type Map = map[string]interface{}
 
 // BinaryJSON json serializer that implements encoding.BinaryMarshaler
