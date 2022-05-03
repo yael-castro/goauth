@@ -9,22 +9,20 @@ import (
 )
 
 // Authenticator defines the process of confirming that something is who it says it is
-type Authenticator interface {
+type Authenticator[T any] interface {
 	// Authenticate check if something is who it says it is
-	Authenticate(interface{}) error
+	Authenticate(T) error
 }
 
 // _ "implement" constraint for OwnerAuthenticator
-var _ Authenticator = OwnerAuthenticator{}
+var _ Authenticator[model.Owner] = OwnerAuthenticator{}
 
 type OwnerAuthenticator struct {
 	repository.Obtainer[string, model.Owner]
 }
 
 // Authenticate validates a model.Owner to check if the password match to hashed password in database obtained by the owner id
-func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
-	owner := i.(model.Owner)
-
+func (o OwnerAuthenticator) Authenticate(owner model.Owner) (err error) {
 	savedOwner, err := o.Obtainer.Obtain(owner.Id)
 	if _, ok := err.(model.NotFound); err == redis.Nil || ok {
 		err = fmt.Errorf(`%w: owner "%s" does not exists`, model.AccessDenied, owner.Id)
@@ -45,7 +43,7 @@ func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 }
 
 // _ "implement" constraint for ClientAuthenticator
-var _ Authenticator = ClientAuthenticator{}
+var _ Authenticator[model.Application] = ClientAuthenticator{}
 
 // ClientAuthenticator authenticates a model.Application
 type ClientAuthenticator struct {
@@ -54,9 +52,7 @@ type ClientAuthenticator struct {
 
 // Authenticate validates a model.Application to check if the client credentials and redirect url match
 // to some record in database
-func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
-	application := i.(model.Application)
-
+func (c ClientAuthenticator) Authenticate(application model.Application) (err error) {
 	savedClient, err := c.Obtainer.Obtain(application.Id)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
 		return fmt.Errorf(`%w: client "%s" does not exist`, model.UnauthorizedClient, application.Id)

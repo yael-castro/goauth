@@ -40,8 +40,8 @@ type AuthorizationCodeGrant struct {
 	// CodeGenerator generate a code to save and validate the requests
 	CodeGenerator
 	TokenGenerator
-	Owner  Authenticator
-	Client Authenticator
+	Owner  Authenticator[model.Owner]
+	Client Authenticator[model.Application]
 	// CodeStorage store for all exchange codes generated
 	CodeStorage repository.Storage[string, model.Authorization]
 	// SessionStorage store for all exchange codes
