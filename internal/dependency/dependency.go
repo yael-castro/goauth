@@ -74,28 +74,32 @@ trcoqHkRGY43kVrARGwxQDv6+MGlWLCQ2m9p/mNv
 		return err
 	}
 
+	ownerStorage := &repository.MockStorage[string, model.Owner]{
+		"contacto@yael-castro.com": model.Owner{
+			Id:       "contacto@yael-castro.com",
+			Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
+		},
+	}
+
+	clientStorage := repository.MockStorage[string, model.Client]{
+		"mobile": model.Client{
+			Id: "mobile",
+			AllowedOrigins: []string{
+				"http://localhost/callback",
+				"http://localhost:8080/callback",
+			},
+		},
+	}
+
 	grant := business.AuthorizationCodeGrant{
 		TokenGenerator: generator,
 		ScopeParser:    business.NewScopeParser(),
 		CodeGenerator:  business.GenerateRandomCode,
 		Owner: business.OwnerAuthenticator{
-			Obtainer: &repository.MockStorage[string, model.Owner]{
-				"contacto@yael-castro.com": model.Owner{
-					Id:       "contacto@yael-castro.com",
-					Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
-				},
-			},
+			Obtainer: repository.ObtainerFunc[string, model.Owner](ownerStorage.Obtain),
 		},
 		Client: business.ClientAuthenticator{
-			Obtainer: repository.MockClientFinder{
-				"mobile": model.Client{
-					Id: "mobile",
-					AllowedOrigins: []string{
-						"http://localhost/callback",
-						"http://localhost:8080/callback",
-					},
-				},
-			},
+			Obtainer: repository.ObtainerFunc[string, model.Client](clientStorage.Obtain),
 		},
 		CodeStorage:    &repository.MockStorage[string, model.Authorization]{},
 		SessionStorage: &repository.MockStorage[string, model.Session]{},
