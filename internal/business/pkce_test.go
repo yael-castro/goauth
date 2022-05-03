@@ -130,7 +130,7 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 	authorizer := AuthorizationCodeGrant{
 		PKCE: ProofKeyCodeExchange{},
 		Client: ClientAuthenticator{
-			Obtainer: repository.MockClientFinder{
+			Obtainer: repository.ObtainerFunc[string, model.Client](repository.MockStorage[string, model.Client]{
 				"a06a0630-31f5-4cc3-8e47-ea61a60c1199": {
 					Id:             "a06a0630-31f5-4cc3-8e47-ea61a60c1199",
 					AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
@@ -139,7 +139,7 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 					Id:             "4cc3-8e47-ea61a60c1199-a06a0630-31f5",
 					AllowedOrigins: []string{"http://localhost/callback/", "http://localhost:8080/callback/"},
 				},
-			},
+			}.Obtain),
 		},
 		CodeGenerator:  GenerateRandomCode,
 		CodeStorage:    &repository.MockStorage[string, model.Authorization]{},

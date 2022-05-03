@@ -48,11 +48,11 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		},
 		{
 			authenticator: ClientAuthenticator{
-				Obtainer: repository.MockClientFinder{
+				Obtainer: repository.ObtainerFunc[string, model.Client](repository.MockStorage[string, model.Client]{
 					"mobile": model.Client{
 						AllowedOrigins: []string{"https://goauth.com"},
 					},
-				},
+				}.Obtain),
 			},
 			tests: []authenticationTestCase{
 				{

@@ -49,7 +49,7 @@ var _ Authenticator = ClientAuthenticator{}
 
 // ClientAuthenticator authenticates a model.Application
 type ClientAuthenticator struct {
-	repository.Obtainer
+	repository.Obtainer[string, model.Client]
 }
 
 // Authenticate validates a model.Application to check if the client credentials and redirect url match
@@ -57,7 +57,7 @@ type ClientAuthenticator struct {
 func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
 	application := i.(model.Application)
 
-	data, err := c.Obtainer.Obtain(application.Id)
+	savedClient, err := c.Obtainer.Obtain(application.Id)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
 		return fmt.Errorf(`%w: client "%s" does not exist`, model.UnauthorizedClient, application.Id)
 	}
@@ -65,8 +65,6 @@ func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
 	if err != nil {
 		return
 	}
-
-	savedClient := data.(model.Client)
 
 	if !savedClient.IsValidOrigin(application.RedirectURL.String()) {
 		err = fmt.Errorf("%w: invalid redirect_uri", model.UnauthorizedClient)
