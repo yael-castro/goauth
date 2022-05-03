@@ -49,7 +49,7 @@ var _ Authenticator = ClientAuthenticator{}
 
 // ClientAuthenticator authenticates a model.Application
 type ClientAuthenticator struct {
-	repository.Finder
+	repository.Obtainer
 }
 
 // Authenticate validates a model.Application to check if the client credentials and redirect url match
@@ -57,7 +57,7 @@ type ClientAuthenticator struct {
 func (c ClientAuthenticator) Authenticate(i interface{}) (err error) {
 	application := i.(model.Application)
 
-	data, err := c.Finder.Find(application.Id)
+	data, err := c.Obtainer.Obtain(application.Id)
 	if _, ok := err.(model.NotFound); ok || err == redis.Nil {
 		return fmt.Errorf(`%w: client "%s" does not exist`, model.UnauthorizedClient, application.Id)
 	}

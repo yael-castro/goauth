@@ -185,24 +185,24 @@ func (s SessionStorage) Delete(tokenId string) error {
 	return s.Del(context.TODO(), s.sessionKey(tokenId)).Err()
 }
 
-// Finder defines a finder for saved data in some storage
-type Finder[K Key, V any] interface {
-	// Find obtains a record by id
-	Find(K) (V, error)
+// Obtainer defines a finder for saved data in some storage
+type Obtainer[K Key, V any] interface {
+	// Obtain obtains a record by id
+	Obtain(K) (V, error)
 }
 
-// FinderFunc functional interface for Finder
-type FinderFunc[K Key, V any] func(K) (V, error)
+// ObtainerFunc functional interface for Obtainer
+type ObtainerFunc[K Key, V any] func(K) (V, error)
 
-// Find executes f(K, V)
-func (f FinderFunc[K, V]) Find(key K) (V, error) {
+// Obtain executes f(K, V)
+func (f ObtainerFunc[K, V]) Obtain(key K) (V, error) {
 	return f(key)
 }
 
 // _ "implement" constraint for ClientFinder
-var _ Finder[string, model.Client] = ClientFinder{}
+var _ Obtainer[string, model.Client] = ClientFinder{}
 
-// ClientFinder creates a Finder implementation to find OAuth clients
+// ClientFinder creates a Obtainer implementation to find OAuth clients
 type ClientFinder struct {
 	*redis.Client
 }
@@ -222,8 +222,8 @@ func (ClientFinder) listKey(clientId string) string {
 	return "client:" + clientId + ":origins"
 }
 
-// Find search a client by client id
-func (c ClientFinder) Find(clientId string) (client model.Client, err error) {
+// Obtain search a client by client id
+func (c ClientFinder) Obtain(clientId string) (client model.Client, err error) {
 	client = model.Client{Id: clientId}
 
 	client.Secret, err = c.Client.Get(context.TODO(), c.secretKey(clientId)).Result()

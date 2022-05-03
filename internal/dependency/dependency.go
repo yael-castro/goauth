@@ -87,7 +87,7 @@ trcoqHkRGY43kVrARGwxQDv6+MGlWLCQ2m9p/mNv
 			},
 		},
 		Client: business.ClientAuthenticator{
-			Finder: repository.MockClientFinder{
+			Obtainer: repository.MockClientFinder{
 				"mobile": model.Client{
 					Id: "mobile",
 					AllowedOrigins: []string{
@@ -149,7 +149,7 @@ func defaultProfile(i interface{}) error {
 			Storage: repository.OwnerStorage{Client: redisClient},
 		},
 		Client: business.ClientAuthenticator{
-			Finder: repository.ClientFinder{Client: redisClient},
+			Obtainer: repository.ClientFinder{Client: redisClient},
 		},
 		ScopeParser: business.NewScopeParser(),
 	}

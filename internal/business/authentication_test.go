@@ -48,7 +48,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		},
 		{
 			authenticator: ClientAuthenticator{
-				Finder: repository.MockClientFinder{
+				Obtainer: repository.MockClientFinder{
 					"mobile": model.Client{
 						AllowedOrigins: []string{"https://goauth.com"},
 					},
