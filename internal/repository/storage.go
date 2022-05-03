@@ -184,3 +184,53 @@ func (s SessionStorage) Obtain(tokenId string) (session model.Session, err error
 func (s SessionStorage) Delete(tokenId string) error {
 	return s.Del(context.TODO(), s.sessionKey(tokenId)).Err()
 }
+
+// Finder defines a finder for saved data in some storage
+type Finder[K Key, V any] interface {
+	// Find obtains a record by id
+	Find(K) (V, error)
+}
+
+// FinderFunc functional interface for Finder
+type FinderFunc[K Key, V any] func(K) (V, error)
+
+// Find executes f(K, V)
+func (f FinderFunc[K, V]) Find(key K) (V, error) {
+	return f(key)
+}
+
+// _ "implement" constraint for ClientFinder
+var _ Finder[string, model.Client] = ClientFinder{}
+
+// ClientFinder creates a Finder implementation to find OAuth clients
+type ClientFinder struct {
+	*redis.Client
+}
+
+// clientKey creates a key with the pattern "client:<clientId>" to save a client
+func (ClientFinder) clientKey(clientId string) string {
+	return "client:" + clientId
+}
+
+// secretKey creates a key with the pattern "client:<clientId>:secret" to save a client secret
+func (ClientFinder) secretKey(clientId string) string {
+	return "client:" + clientId + ":secret"
+}
+
+// listKey creates a key with the pattern "client:<clientId>:origins" to save allowed origins for client
+func (ClientFinder) listKey(clientId string) string {
+	return "client:" + clientId + ":origins"
+}
+
+// Find search a client by client id
+func (c ClientFinder) Find(clientId string) (client model.Client, err error) {
+	client = model.Client{Id: clientId}
+
+	client.Secret, err = c.Client.Get(context.TODO(), c.secretKey(clientId)).Result()
+	if err != nil {
+		return
+	}
+
+	client.AllowedOrigins, err = c.LRange(context.TODO(), c.listKey(clientId), 0, 10).Result()
+	return
+}
