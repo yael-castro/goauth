@@ -2,263 +2,314 @@ package repository
 
 import (
 	"errors"
+	"github.com/go-redis/redis/v8"
 	"github.com/yael-castro/goauth/internal/model"
-	"net/url"
 	"reflect"
 	"strconv"
 	"testing"
 )
 
-// testCase is a common test case for crud operations
-type testCase struct {
-	// id record identifier
-	id string
-	// input record to be created or expected data
-	input interface{}
-	// expectedErr error that is expected
+// StorageCase test case for Storage interface
+type StorageCase[K Key, V any] struct {
+	Id    K
+	Input V
+	// expectedErr expected error
 	expectedErr error
+	// skipSetup indicates if the initial configuration must be skipped,
+	// configurations like a pre-creation of records
+	skipSetup bool
 }
 
-// TestStorage_Create
-// Check the functionality of the Create method for different Storage interface implementations (StateStorage and OwnerStorage)
-// TODO validate the duplicated records
+// StorageTest test for Storage interface
+type StorageTest[K Key, V any] struct {
+	// Storage interface instance to test
+	Storage[K, V]
+	// Cases test cases for integration or unit tests
+	Cases []StorageCase[K, V]
+}
+
+// TestStorage_Create check if the method Create of different implementations of Storage
+// interface works correctly, using the function testStorageCreate
+// TODO: check the creation of duplicate records
 func TestStorage_Create(t *testing.T) {
-	client, err := NewRedisClient(defaultRedisConfiguration)
+	redisClient, err := NewRedisClient(defaultRedisConfiguration)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tdt := []struct {
-		storage Storage
-		tests   []testCase
-	}{
-		{
-			storage: StateStorage{Client: client},
-			tests: []testCase{
-				{
-					id: "abc",
-					input: model.Authorization{
-						State:               "ABC",
-						ClientId:            "3aad9943-714d-4576-9c6f-bb45b142666c",
-						Scope:               "http://localhost/private/,http://localhost/private2/",
-						ResponseType:        "code",
-						CodeChallenge:       "FFF",
-						CodeChallengeMethod: "PLAIN",
-						RedirectURL: func() *url.URL {
-							uri, _ := url.Parse("http://localhost/callback")
-							return uri
-						}(),
-					},
-				},
-				{
-					id: "xyz",
-					input: model.Authorization{
-						State: "ABC",
-						RedirectURL: func() *url.URL {
-							uri, _ := url.Parse("http://localhost/callback")
-							return uri
-						}(),
-					},
+	// Testing OwnerStorage
+	testStorageCreate(t, StorageTest[string, model.Owner]{
+		Storage: OwnerStorage{
+			Client: redisClient,
+		},
+		Cases: []StorageCase[string, model.Owner]{
+			{
+				Id: "abc",
+				Input: model.Owner{
+					Id:       "abc",
+					Password: "1234",
 				},
 			},
 		},
-		{
-			storage: OwnerStorage{Client: client},
-			tests: []testCase{
-				{id: "abc", input: model.Owner{Id: "abc", Password: "xyz"}},
-				{id: "xyz", input: model.Owner{Id: "xyz", Password: "abc"}},
-			},
-		},
-		{
-			storage: SessionStorage{Client: client},
-			tests: []testCase{
-				{
-					id: "abc",
-					input: model.Session{
-						UserAgent: "Go/1.17",
-						Owner: model.Owner{
-							Id: "Golang",
-						},
-					},
-				},
-				{
-					id: "xyz",
-					input: model.Session{
-						UserAgent: "Go/1.17",
-						Owner: model.Owner{
-							Id: "Go",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	t.Cleanup(func() {
-		_ = client.Close()
 	})
 
-	// Here starts the unit tests
-	for _, v := range tdt {
-		storage := v.storage
-		t.Run(reflect.TypeOf(v.storage).String(), func(t *testing.T) {
-			for i, v := range v.tests {
-				t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-					t.Cleanup(func() {
-						_ = storage.Delete(v.id)
-					})
+	// Testing SessionStorage
+	testStorageCreate(t, StorageTest[string, model.Session]{
+		Storage: SessionStorage{
+			Client: redisClient,
+		},
+		Cases: []StorageCase[string, model.Session]{
+			{
+				Id: "abc",
+				Input: model.Session{
+					UserAgent: "Go/1.18",
+				},
+			},
+		},
+	})
 
-					err := storage.Create(v.id, v.input)
-					if !errors.Is(err, v.expectedErr) {
-						t.Fatal(err)
-					}
-
-					if err != nil {
-						t.Skip(err)
-					}
-
-					t.Logf("%+v", v.input)
-				})
-			}
-		})
-	}
+	// Testing SessionStorage
+	testStorageCreate(t, StorageTest[string, model.Authorization]{
+		Storage: StateStorage{
+			Client: redisClient,
+		},
+		Cases: []StorageCase[string, model.Authorization]{
+			{
+				Id: "abc",
+				Input: model.Authorization{
+					ResponseType: "code",
+				},
+			},
+		},
+	})
 }
 
-// TestStorage_Obtain
-// Checks the functionality of the Obtain method for different Storage interface implementations (StateStorage and OwnerStorage)
+// TestStorage_Obtain check if the method Obtain of different implementations of Storage
+// interface works correctly, using the function testStorageObtain
 func TestStorage_Obtain(t *testing.T) {
-	client, err := NewRedisClient(defaultRedisConfiguration)
+	redisClient, err := NewRedisClient(defaultRedisConfiguration)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tdt := []struct {
-		storage Storage
-		tests   []testCase
-	}{
-		{
-			storage: StateStorage{Client: client},
-			tests: []testCase{
-				{
-					id: "abc",
-					input: model.Authorization{
-						State:               "",
-						ClientId:            "def",
-						ClientSecret:        "def",
-						Scope:               "qwerty",
-						ResponseType:        "code",
-						CodeChallenge:       "abc",
-						CodeChallengeMethod: "S256",
-					},
+	// Testing OwnerStorage
+	testStorageObtain(t, StorageTest[string, model.Owner]{
+		Storage: OwnerStorage{
+			Client: redisClient,
+		},
+		Cases: []StorageCase[string, model.Owner]{
+			{
+				Id: "abc",
+				Input: model.Owner{
+					Id:       "abc",
+					Password: "1234",
 				},
 			},
-		},
-		{
-			storage: OwnerStorage{Client: client},
-			tests: []testCase{
-				{
-					id: "xyz",
-					input: model.Owner{
-						Id:       "xyz",
-						Password: "foo",
-					},
-				},
+			{
+				Id:          "abc",
+				skipSetup:   true,
+				expectedErr: redis.Nil,
 			},
 		},
-		{
-			storage: SessionStorage{Client: client},
-			tests: []testCase{
-				{
-					id: "",
-					input: model.Session{
-						UserAgent: "Go/1.17",
-						Owner:     model.Owner{Id: "foo"},
-					},
+	})
+
+	// Testing SessionStorage
+	testStorageObtain(t, StorageTest[string, model.Session]{
+		Storage: SessionStorage{Client: redisClient},
+		Cases: []StorageCase[string, model.Session]{
+			{
+				Id: "abc",
+				Input: model.Session{
+					UserAgent: "Go/1.17",
 				},
 			},
+			{
+				Id:          "abc",
+				skipSetup:   true,
+				expectedErr: redis.Nil,
+			},
 		},
+	})
+
+	// Testing SessionStorage
+	testStorageObtain(t, StorageTest[string, model.Authorization]{
+		Storage: StateStorage{Client: redisClient},
+		Cases: []StorageCase[string, model.Authorization]{
+			{
+				Id: "abc",
+				Input: model.Authorization{
+					ResponseType: "code",
+				},
+			},
+			{
+				Id:          "abc",
+				skipSetup:   true,
+				expectedErr: redis.Nil,
+			},
+		},
+	})
+}
+
+// TestStorage_Delete check if the method Delete of different implementations of Storage
+// interface works correctly, using the function testStorageDelete
+func TestStorage_Delete(t *testing.T) {
+	redisClient, err := NewRedisClient(defaultRedisConfiguration)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	// Here starts unit tests
-	for _, v := range tdt {
-		storage := v.storage
-		t.Run(reflect.TypeOf(storage).String(), func(t *testing.T) {
+	// Testing OwnerStorage
+	testStorageDelete(t, StorageTest[string, model.Owner]{
+		Storage: OwnerStorage{Client: redisClient},
+		Cases: []StorageCase[string, model.Owner]{
+			{
+				Id: "abc",
+				Input: model.Owner{
+					Id:       "abc",
+					Password: "1234",
+				},
+			},
+			{
+				Id:        "abc",
+				skipSetup: true,
+			},
+		},
+	})
 
-			for i, v := range v.tests {
-				err := storage.Create(v.id, v.input)
-				if err != nil {
-					t.Fatal(err)
+	// Testing SessionStorage
+	testStorageDelete(t, StorageTest[string, model.Session]{
+		Storage: SessionStorage{Client: redisClient},
+		Cases: []StorageCase[string, model.Session]{
+			{
+				Id: "abc",
+				Input: model.Session{
+					UserAgent: "Go/1.18",
+				},
+			},
+			{
+				Id:        "abc",
+				skipSetup: true,
+			},
+		},
+	})
+
+	// Testing StateStorage
+	testStorageDelete(t, StorageTest[string, model.Authorization]{
+		Storage: StateStorage{Client: redisClient},
+		Cases: []StorageCase[string, model.Authorization]{
+			{
+				Id: "abc",
+				Input: model.Authorization{
+					ResponseType: "code",
+				},
+			},
+			{
+				Id:        "abc",
+				skipSetup: true,
+			},
+		},
+	})
+}
+
+// testStorageCreate util function to test the method Create of the Storage interface
+//
+// Notes:
+//
+// - Before starting each test case, a temporary record is created unless otherwise
+//   indicated with a false value in the skipSetup field.
+//
+// - Always to end each test case the temporary record is deleted
+//
+func testStorageCreate[K Key, V any](t *testing.T, test StorageTest[K, V]) {
+	t.Run(reflect.TypeOf(test.Storage).String(), func(t *testing.T) {
+		for i, v := range test.Cases {
+			t.Run(strconv.Itoa(i+1), func(t *testing.T) {
+				t.Logf(`Creating record with id "%v"`, v.Id)
+				err := test.Storage.Create(v.Id, v.Input)
+				if !errors.Is(err, v.expectedErr) {
+					t.Fatalf(`Unexpected error "%v"`, err)
 				}
 
 				t.Cleanup(func() {
-					_ = storage.Delete(v.id)
+					t.Logf(`Deleting record with id "%v"`, v.Id)
+					test.Storage.Delete(v.Id)
 				})
-
-				t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-					gotData, err := storage.Obtain(v.id)
-					if !errors.Is(err, v.expectedErr) {
-						t.Fatal(err)
-					}
-
-					if err != nil {
-						t.Skip(err)
-					}
-
-					if !reflect.DeepEqual(gotData, v.input) {
-						t.Error(`mismatch expected data`)
-						t.Error(`got data`)
-						t.Errorf(`%+v`, gotData)
-						t.Error(`expected data`)
-						t.Errorf("%+v", v.input)
-						t.Fatal()
-					}
-
-					t.Logf("%+v", gotData)
-				})
-			}
-		})
-	}
-
+			})
+		}
+	})
 }
 
-// TestStorage_Delete
-// Checks the functionality of the Delete method for different Storage interface implementations (StateStorage and OwnerStorage)
-// TODO makes a better testing for each implementation
-func TestStorage_Delete(t *testing.T) {
-	client, err := NewRedisClient(defaultRedisConfiguration)
-	if err != nil {
-		t.Fatal(err)
-	}
+// testStorageObtain test the method Obtain of the Storage interface using the received implementation of the Storage interface
+// and the test cases
+//
+// Notes:
+//
+// - Before starting each test case, a temporary record is created unless otherwise
+//   indicated with a false value in the skipSetup field.
+//
+// - Always to end each test case the temporary record is deleted
+//
+func testStorageObtain[K Key, V any](t *testing.T, test StorageTest[K, V]) {
+	t.Run(reflect.TypeOf(test.Storage).String(), func(t *testing.T) {
+		for i, v := range test.Cases {
+			t.Run(strconv.Itoa(i+1), func(t *testing.T) {
+				if !v.skipSetup {
+					t.Logf(`Creating record with id "%v"`, v.Id)
+					_ = test.Storage.Create(v.Id, v.Input)
+				}
 
-	tdt := []struct {
-		input       string
-		expectedErr error
-	}{
-		{input: "abc"},
-		{input: "abc"},
-	}
+				output, err := test.Obtain(v.Id)
+				if !errors.Is(err, v.expectedErr) {
+					t.Fatalf(`"Error "%v" was expected but "%v" was obtained`, v.expectedErr, err)
+				}
 
-	t.Cleanup(func() {
-		_ = client.Close()
-	})
+				if err != nil {
+					t.Skip(err)
+				}
 
-	storages := []Storage{
-		StateStorage{Client: client},
-		OwnerStorage{Client: client},
-		SessionStorage{Client: client},
-	}
+				if !reflect.DeepEqual(output, v.Input) {
+					t.Fatalf(`"%v" was expected but "%v" was obtained`, output, v.Input)
+				}
 
-	// Here starts unit tests
-	for _, storage := range storages {
-		t.Run(reflect.TypeOf(storage).String(), func(t *testing.T) {
-			for i, v := range tdt {
-				t.Run(strconv.Itoa(i+1), func(t *testing.T) {
-					err := storage.Delete(v.input)
-					if !errors.Is(err, v.expectedErr) {
-						t.Fatal(err)
-					}
+				t.Logf("%+v", output)
+				t.Cleanup(func() {
+					t.Logf(`Deleting record with id "%v"`, v.Id)
+					test.Storage.Delete(v.Id)
 				})
-			}
-		})
-	}
+			})
+		}
+	})
+}
+
+// testStorageDelete test the method Delete of the Storage interface
+//
+// Notes:
+//
+// - Before starting each test case, a temporary record is created unless otherwise
+//   indicated with a false value in the skipSetup field.
+//
+// - Always to end each test case the temporary record is deleted
+//
+func testStorageDelete[K Key, V any](t *testing.T, test StorageTest[K, V]) {
+	t.Run(reflect.TypeOf(test.Storage).String(), func(t *testing.T) {
+		for i, v := range test.Cases {
+			t.Run(strconv.Itoa(i+1), func(t *testing.T) {
+				t.Logf(`Creating record with id "%v"`, v.Id)
+				if !v.skipSetup {
+					_ = test.Storage.Create(v.Id, v.Input)
+				}
+
+				t.Logf(`Deleting record with id "%v"`, v.Id)
+				err := test.Delete(v.Id)
+				if !errors.Is(err, v.expectedErr) {
+					t.Fatalf(`"Error "%v" was expected but "%v" was obtained`, v.expectedErr, err)
+				}
+
+				//t.Cleanup(func() {
+				//	t.Logf(`Deleting record with id "%v"`, v.Id)
+				//	test.Storage.Delete(v.Id)
+				//})
+			})
+		}
+	})
 }
