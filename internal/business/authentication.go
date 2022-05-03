@@ -18,14 +18,14 @@ type Authenticator interface {
 var _ Authenticator = OwnerAuthenticator{}
 
 type OwnerAuthenticator struct {
-	repository.Storage[string, model.Owner]
+	repository.Obtainer[string, model.Owner]
 }
 
 // Authenticate validates a model.Owner to check if the password match to hashed password in database obtained by the owner id
 func (o OwnerAuthenticator) Authenticate(i interface{}) (err error) {
 	owner := i.(model.Owner)
 
-	savedOwner, err := o.Storage.Obtain(owner.Id)
+	savedOwner, err := o.Obtainer.Obtain(owner.Id)
 	if _, ok := err.(model.NotFound); err == redis.Nil || ok {
 		err = fmt.Errorf(`%w: owner "%s" does not exists`, model.AccessDenied, owner.Id)
 	}

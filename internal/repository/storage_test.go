@@ -307,7 +307,7 @@ func testStorageDelete[K Key, V any](t *testing.T, test StorageTest[K, V]) {
 
 				//t.Cleanup(func() {
 				//	t.Logf(`Deleting record with id "%v"`, v.Id)
-				//	test.Storage.Delete(v.Id)
+				//	test.Obtainer.Delete(v.Id)
 				//})
 			})
 		}

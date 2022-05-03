@@ -26,7 +26,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 	}{
 		{
 			authenticator: OwnerAuthenticator{
-				Storage: &repository.MockStorage[string, model.Owner]{
+				Obtainer: &repository.MockStorage[string, model.Owner]{
 					"contacto@yael-castro.com": model.Owner{
 						Id:       "contacto@yael-castro.com",
 						Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro

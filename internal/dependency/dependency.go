@@ -79,7 +79,7 @@ trcoqHkRGY43kVrARGwxQDv6+MGlWLCQ2m9p/mNv
 		ScopeParser:    business.NewScopeParser(),
 		CodeGenerator:  business.GenerateRandomCode,
 		Owner: business.OwnerAuthenticator{
-			Storage: &repository.MockStorage[string, model.Owner]{
+			Obtainer: &repository.MockStorage[string, model.Owner]{
 				"contacto@yael-castro.com": model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne", // yael.castro
@@ -146,7 +146,7 @@ func defaultProfile(i interface{}) error {
 		CodeStorage:    repository.StateStorage{Client: redisClient},
 		PKCE:           business.ProofKeyCodeExchange{},
 		Owner: business.OwnerAuthenticator{
-			Storage: repository.OwnerStorage{Client: redisClient},
+			Obtainer: repository.OwnerStorage{Client: redisClient},
 		},
 		Client: business.ClientAuthenticator{
 			Obtainer: repository.ClientFinder{Client: redisClient},

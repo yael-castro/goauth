@@ -146,12 +146,12 @@ func TestProofKeyCodeExchange_Authorize(t *testing.T) {
 		SessionStorage: &repository.MockStorage[string, model.Session]{},
 		ScopeParser:    NewScopeParser(),
 		Owner: OwnerAuthenticator{
-			Storage: &repository.MockStorage[string, model.Owner]{
+			Obtainer: repository.ObtainerFunc[string, model.Owner](repository.MockStorage[string, model.Owner]{
 				"contacto@yael-castro.com": model.Owner{
 					Id:       "contacto@yael-castro.com",
 					Password: "$2a$10$g141w.TTnp5Bm/rLNqRRRevOSFhKBdV5KaJYxEDi9U5R9TgkZbfne",
 				},
-			},
+			}.Obtain),
 		},
 	}
 
